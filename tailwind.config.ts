@@ -76,6 +76,8 @@ const config = {
         zombie: ['"Zombie Holocaust"', "sans-serif"],
         gothic: ['"Gothical"', "sans-serif"],
         angel: ['"Angel wish"', "sans-serif"],
+        monsterParty: ['"Monster Party"', "sans-serif"],
+        bitter: ['"Bitter"', "sans-serif"],
       },
     },
   },

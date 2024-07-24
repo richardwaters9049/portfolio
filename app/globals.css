@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Monster Party";
+  src: url("/fonts/MONSP___.TTF") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+.font-monsterParty {
+  font-size: 25rem;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -74,12 +85,23 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.main-container button {
+
+.copybtn,
+.navbar,
+button {
   background: linear-gradient(90deg, rgb(36, 35, 35), rgb(225, 51, 51));
 }
 
 @media screen and (max-width: 890px) {
   .main-container h1 {
     font-size: 8rem;
+  }
+}
+@media screen and (max-width: 767px) {
+  .bio,
+  .software,
+  .hacking,
+  h2 {
+    text-align: center;
   }
 }

@@ -34,7 +34,7 @@ const Home: React.FC = () => {
           { opacity: 1, x: 0 }, "-=0.25")
         .fromTo(buttonRef.current,
           { opacity: 0, scale: 0.8 },
-          { opacity: 1, scale: 1, ease: "power1.out" }, "+=1.5");
+          { opacity: 1, scale: 1, ease: "power1.out" }, "+=0.2");
     } else {
       console.error("One or more elements are not properly referenced.");
     }
