@@ -1,9 +1,9 @@
 // components/Navbar.tsx
 
-import React, { useState } from 'react';
+import React, { useState, forwardRef } from 'react';
 import Link from 'next/link';
 
-const Nav: React.FC = () => {
+const Nav = forwardRef<HTMLElement>((props, ref) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const toggleMenu = () => {
@@ -11,7 +11,7 @@ const Nav: React.FC = () => {
     };
 
     return (
-        <nav className="navbar p-4">
+        <nav ref={ref} className="navbar p-6">
             <div className="container mx-auto flex justify-between items-center">
                 <Link className="text-white font-angel text-6xl tracking-widest" href="/">R</Link>
                 <div className="block lg:hidden">
@@ -52,6 +52,8 @@ const Nav: React.FC = () => {
             </div>
         </nav>
     );
-};
+});
+
+Nav.displayName = 'Nav';
 
 export default Nav;

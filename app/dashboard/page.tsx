@@ -2,19 +2,22 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import CopyToClipboard from "react-copy-to-clipboard";
-import Nav from "@/components/ui/nav";
+// Ensure the correct import path
 import gsap from "gsap";
+import Nav from "@/components/ui/nav";
 
 const Page: React.FC = () => {
     const [copied, setCopied] = useState(false);
 
     const mainRef = useRef<HTMLDivElement>(null);
+    const navRef = useRef<HTMLElement>(null);
     const h2Ref = useRef<HTMLHeadingElement>(null);
     const pRefs = useRef<HTMLParagraphElement[]>([]);
     pRefs.current = [];
 
     const buttonRef = useRef<HTMLButtonElement>(null);
     const copyContainerRef = useRef<HTMLDivElement>(null);
+    const slideInRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (copied) {
@@ -28,11 +31,14 @@ const Page: React.FC = () => {
             defaults: { duration: 1, ease: "power2.out" },
         });
 
-        if (mainRef.current && h2Ref.current && pRefs.current.length > 0 && buttonRef.current && copyContainerRef.current) {
+        if (navRef.current && mainRef.current && h2Ref.current && pRefs.current.length > 0 && buttonRef.current && copyContainerRef.current && slideInRef.current) {
             timeline
+                .fromTo(navRef.current,
+                    { y: -100, opacity: 0 },
+                    { y: 0, opacity: 1 })
                 .fromTo(mainRef.current,
                     { opacity: 0 },
-                    { opacity: 1 })
+                    { opacity: 1 }, "-=0.75")
                 .fromTo(h2Ref.current,
                     { opacity: 0, y: -50 },
                     { opacity: 1, y: 0 }, "-=0.75")
@@ -41,7 +47,10 @@ const Page: React.FC = () => {
                     { opacity: 1, x: 0, stagger: 0.2 }, "-=0.5")
                 .fromTo(copyContainerRef.current,
                     { opacity: 0, scale: 0.8 },
-                    { opacity: 1, scale: 1, ease: "power1.out" }, "+=0.2");
+                    { opacity: 1, scale: 1, ease: "power1.out" }, "+=0.2")
+                .fromTo(slideInRef.current,
+                    { x: 100, opacity: 0 },
+                    { x: 0, opacity: 1, ease: "power2.out" }, "-=0.1");
         } else {
             console.error("One or more elements are not properly referenced.");
         }
@@ -55,7 +64,7 @@ const Page: React.FC = () => {
 
     return (
         <main ref={mainRef}>
-            <Nav />
+            <Nav ref={navRef} />
             <section className="w-full flex flex-row justify-center items-center">
                 <div className="bio p-8 flex flex-col gap-6 text-xl">
                     <h2 ref={h2Ref} className="text-black font-angel text-8xl">Welcome</h2>
@@ -87,7 +96,7 @@ const Page: React.FC = () => {
                         </CopyToClipboard>
                     </div>
                 </div>
-                <div className="font-monsterParty">
+                <div ref={slideInRef} className="font-monsterParty monster">
                     Q
                 </div>
             </section>

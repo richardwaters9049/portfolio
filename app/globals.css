@@ -104,4 +104,14 @@ button {
   h2 {
     text-align: center;
   }
+
+  .copy-container {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .monster {
+    display: none;
+  }
 }
