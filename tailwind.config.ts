@@ -79,6 +79,9 @@ const config = {
         monsterParty: ['"Monster Party"', "sans-serif"],
         bitter: ['"Bitter"', "sans-serif"],
       },
+      backgroundColor: {
+        LFCbg: "#dc0714;",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
