@@ -2,10 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import CopyToClipboard from "react-copy-to-clipboard";
-// Ensure the correct import path
 import gsap from "gsap";
 import Nav from "@/components/ui/nav";
-import Navbat from "@/components/ui/nav-bat";
+
 
 const Page: React.FC = () => {
     const [copied, setCopied] = useState(false);

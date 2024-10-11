@@ -1,9 +1,11 @@
 // components/Navbar.tsx
 
-import React, { useState, forwardRef } from 'react';
-import Link from 'next/link';
-import Image from 'next/image'
-import Bat from '@/public/images/nav-bat.svg'
+"use client";
+
+import React, { useState, forwardRef } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import Bat from "@/public/images/nav-bat.svg";
 
 const Nav = forwardRef<HTMLElement>((props, ref) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -15,7 +17,12 @@ const Nav = forwardRef<HTMLElement>((props, ref) => {
     return (
         <nav ref={ref} className="navbar p-6">
             <div className="flex justify-between items-center">
-                <Link className="text-white font-angel text-6xl tracking-widest" href="/">R</Link>
+                <Link
+                    className="text-white font-angel text-6xl tracking-widest"
+                    href="/"
+                >
+                    R
+                </Link>
                 <div className="block lg:hidden">
                     <button
                         onClick={toggleMenu}
@@ -36,26 +43,41 @@ const Nav = forwardRef<HTMLElement>((props, ref) => {
                             />
                         </svg> */}
 
-                        <Image src={Bat} alt="bat"
-                            width={100} height={100}
+                        <Image
+                            src={Bat}
+                            alt="bat"
+                            width={100}
+                            height={100}
                             className="navbat"
                         />
                     </button>
                 </div>
-                <div className={` lg:flex lg:items-center justify-between lg:w-auto ${isOpen ? 'block' : 'hidden'}`}>
+                <div
+                    className={` lg:flex lg:items-center justify-between lg:w-auto ${isOpen ? "block" : "hidden"
+                        }`}
+                >
                     <ul className="lg:flex lg:justify-between text-white lg:space-x-6">
                         <li className="mt-3 lg:mt-0">
-                            <Link href="/software" className="hover:underline font-angel text-4xl tracking-widest underline-offset-8">
+                            <Link
+                                href="/software"
+                                className="hover:underline font-angel text-4xl tracking-widest underline-offset-8 animate-slide-in"
+                            >
                                 Software
                             </Link>
                         </li>
                         <li className="mt-3 lg:mt-0">
-                            <Link href="/hacking" className="hover:underline font-angel text-4xl tracking-widest underline-offset-8">
+                            <Link
+                                href="/hacking"
+                                className="hover:underline font-angel text-4xl tracking-widest underline-offset-8"
+                            >
                                 Hacking
                             </Link>
                         </li>
                         <li className="mt-3 lg:mt-0">
-                            <Link href="/blog" className="hover:underline font-angel text-4xl tracking-widest underline-offset-8">
+                            <Link
+                                href="/blog"
+                                className="hover:underline font-angel text-4xl tracking-widest underline-offset-8"
+                            >
                                 Blog
                             </Link>
                         </li>
@@ -66,6 +88,6 @@ const Nav = forwardRef<HTMLElement>((props, ref) => {
     );
 });
 
-Nav.displayName = 'Nav';
+Nav.displayName = "Nav";
 
 export default Nav;
