@@ -41,12 +41,12 @@ const Home: React.FC = () => {
   }, []);
 
   return (
-    <main ref={mainRef} className="w-screen h-screen flex flex-col items-center justify-center main-container gap-8 text-center p-2">
+    <main ref={mainRef} className="w-screen h-screen flex flex-col items-center justify-center main-container gap-5 text-center p-6">
       <h1 ref={h1Ref} className="font-angel">Richy Rose</h1>
-      <p ref={p1Ref} className="font-zombie text-5xl tracking-widest ">Software Engineer</p>
-      <p ref={p2Ref} className="font-zombie text-5xl tracking-widest">Ethical Hacker</p>
+      <p ref={p1Ref} className="font-zombie text-3xl tracking-widest ">Software Engineer</p>
+      <p ref={p2Ref} className="font-zombie text-3xl tracking-widest">Ethical Hacker</p>
       <Link href="/dashboard" passHref>
-        <Button ref={buttonRef} className="text-4xl font-angel p-8 m-8 tracking-widest">Enter</Button>
+        <Button ref={buttonRef} className="text-3xl font-angel p-8 m-8 tracking-widest">Enter</Button>
       </Link>
     </main>
   );

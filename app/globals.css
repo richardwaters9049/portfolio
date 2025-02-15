@@ -80,7 +80,7 @@
 }
 
 .main-container h1 {
-  font-size: 15rem;
+  font-size: 10rem;
   background: linear-gradient(90deg, rgb(36, 35, 35), rgb(225, 51, 51));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
