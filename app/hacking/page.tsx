@@ -1,5 +1,5 @@
 import React from "react";
-
+import Nav from "@/components/ui/nav";
 interface Project {
     id: number;
     title: string;
@@ -34,40 +34,43 @@ const projects: Project[] = [
 
 const HackingPage: React.FC = () => {
     return (
-        <div className="min-h-screen text-black p-6">
-            <h1 className="text-8xl text-center mb-8 font-angel tracking-wider">Hacking Projects</h1>
+        <main>
+            <Nav />
+            <div className="min-h-screen text-black p-6">
+                <h1 className="text-8xl text-center mb-8 font-angel tracking-wider">Hacking Projects</h1>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map((project: Project) => (
-                    <div
-                        key={project.id}
-                        className="bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition duration-300"
-                    >
-                        <h2 className="text-xl font-bold mb-2">{project.title}</h2>
-                        <p className="text-gray-400 mb-4">{project.description}</p>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {projects.map((project: Project) => (
+                        <div
+                            key={project.id}
+                            className="bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition duration-300 font-bitter"
+                        >
+                            <h2 className="text-xl font-bold mb-2 text-white">{project.title}</h2>
+                            <p className="text-gray-400 mb-4">{project.description}</p>
 
-                        <div className="flex justify-between">
-                            <a
-                                href={project.demoLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-                            >
-                                Demo
-                            </a>
-                            <a
-                                href={project.repoLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
-                            >
-                                GitHub
-                            </a>
+                            <div className="flex justify-between">
+                                <a
+                                    href={project.demoLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+                                >
+                                    Demo
+                                </a>
+                                <a
+                                    href={project.repoLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
+                                >
+                                    GitHub
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
-        </div>
+        </main>
     );
 };
 

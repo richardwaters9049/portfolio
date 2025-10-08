@@ -15,11 +15,11 @@ const Nav = forwardRef<HTMLElement>((props, ref) => {
     };
 
     return (
-        <nav ref={ref} className="navbar p-6">
+        <nav ref={ref} className="navbar p-4">
             <div className="flex justify-between items-center">
                 <Link
                     className="text-white font-angel text-6xl tracking-widest"
-                    href="/"
+                    href="/dashboard"
                 >
                     R
                 </Link>
@@ -57,12 +57,20 @@ const Nav = forwardRef<HTMLElement>((props, ref) => {
                         }`}
                 >
                     <ul className="lg:flex lg:justify-between text-white lg:space-x-6">
-                        <li className="mt-3 lg:mt-0">
+                        {/* <li className="mt-3 lg:mt-0">
                             <Link
                                 href="/software"
-                                className="hover:underline font-angel text-4xl tracking-widest underline-offset-8 animate-slide-in"
+                                className="hover:underline font-angel text-2xl tracking-widest underline-offset-8 animate-slide-in"
                             >
                                 Software
+                            </Link>
+                        </li> */}
+                        <li className="mt-3 lg:mt-0">
+                            <Link
+                                href="/projects"
+                                className="hover:underline font-angel text-4xl tracking-widest underline-offset-8 animate-slide-in"
+                            >
+                                Projects
                             </Link>
                         </li>
                         <li className="mt-3 lg:mt-0">
@@ -73,14 +81,14 @@ const Nav = forwardRef<HTMLElement>((props, ref) => {
                                 Hacking
                             </Link>
                         </li>
-                        <li className="mt-3 lg:mt-0">
+                        {/* <li className="mt-3 lg:mt-0">
                             <Link
                                 href="/blog"
                                 className="hover:underline font-angel text-4xl tracking-widest underline-offset-8"
                             >
                                 Blog
                             </Link>
-                        </li>
+                        </li> */}
                     </ul>
                 </div>
             </div>

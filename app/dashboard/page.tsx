@@ -1,10 +1,9 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import CopyToClipboard from "react-copy-to-clipboard";
 import gsap from "gsap";
 import Nav from "@/components/ui/nav";
-
 
 const Page: React.FC = () => {
     const [copied, setCopied] = useState(false);
@@ -17,8 +16,9 @@ const Page: React.FC = () => {
 
     const buttonRef = useRef<HTMLButtonElement>(null);
     const copyContainerRef = useRef<HTMLDivElement>(null);
-    const slideInRef = useRef<HTMLDivElement>(null);
+    const maskRef = useRef<HTMLDivElement>(null);
 
+    // reset "Copied!" text
     useEffect(() => {
         if (copied) {
             const timer = setTimeout(() => setCopied(false), 2000);
@@ -26,33 +26,76 @@ const Page: React.FC = () => {
         }
     }, [copied]);
 
+    // intro animation (no slide-in for mask)
     useEffect(() => {
         const timeline = gsap.timeline({
             defaults: { duration: 1, ease: "power2.out" },
         });
 
-        if (navRef.current && mainRef.current && h2Ref.current && pRefs.current.length > 0 && buttonRef.current && copyContainerRef.current && slideInRef.current) {
+        if (
+            navRef.current &&
+            mainRef.current &&
+            h2Ref.current &&
+            pRefs.current.length > 0 &&
+            buttonRef.current &&
+            copyContainerRef.current &&
+            maskRef.current
+        ) {
             timeline
-                .fromTo(navRef.current,
-                    { y: -100, opacity: 0 },
-                    { y: 0, opacity: 1 })
-                .fromTo(mainRef.current,
-                    { opacity: 0 },
-                    { opacity: 1 }, "-=0.75")
-                .fromTo(h2Ref.current,
+                .fromTo(navRef.current, { y: -100, opacity: 0 }, { y: 0, opacity: 1 })
+                .fromTo(mainRef.current, { opacity: 0 }, { opacity: 1 }, "-=0.75")
+                .fromTo(
+                    h2Ref.current,
                     { opacity: 0, y: -50 },
-                    { opacity: 1, y: 0 }, "-=0.75")
-                .fromTo(pRefs.current,
+                    { opacity: 1, y: 0 },
+                    "-=0.75"
+                )
+                .fromTo(
+                    pRefs.current,
                     { opacity: 0, x: -50 },
-                    { opacity: 1, x: 0, stagger: 0.2 }, "-=0.5")
-                .fromTo(copyContainerRef.current,
+                    { opacity: 1, x: 0, stagger: 0.2 },
+                    "-=0.5"
+                )
+                .fromTo(
+                    copyContainerRef.current,
                     { opacity: 0, scale: 0.8 },
-                    { opacity: 1, scale: 1, ease: "power1.out" }, "+=0.2")
-                .fromTo(slideInRef.current,
-                    { x: 100, opacity: 0 },
-                    { x: 0, opacity: 1, ease: "power2.out" }, "-=0.1");
-        } else {
-            console.error("One or more elements are not properly referenced.");
+                    { opacity: 1, scale: 1, ease: "power1.out" },
+                    "+=0.2"
+                )
+                .fromTo(
+                    maskRef.current,
+                    { opacity: 0 },
+                    { opacity: 1, ease: "power2.out" },
+                    "-=0.2"
+                );
+        }
+    }, []);
+
+    // auto-scroll after 3 s
+    useEffect(() => {
+        const scrollTimer = setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        }, 3000);
+        return () => clearTimeout(scrollTimer);
+    }, []);
+
+    // soft, slow glow pulse on mask
+    useEffect(() => {
+        if (maskRef.current) {
+            gsap.to(maskRef.current, {
+                opacity: 0.9,
+                duration: 2.5,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut",
+            });
+            gsap.to(maskRef.current, {
+                filter: "drop-shadow(0 0 10px rgba(0,255,255,0.3))",
+                repeat: -1,
+                yoyo: true,
+                duration: 2.5,
+                ease: "sine.inOut",
+            });
         }
     }, []);
 
@@ -63,40 +106,75 @@ const Page: React.FC = () => {
     };
 
     return (
-        <main ref={mainRef}>
+        <main
+            ref={mainRef}
+            className="min-h-screen w-full bg-gradient-to-b from-gray-900 to-black text-slate-200"
+        >
             <Nav ref={navRef} />
-            <section className="w-full flex flex-row justify-center items-center">
-                <div className="bio p-8 flex flex-col gap-6 text-xl">
-                    <h2 ref={h2Ref} className="text-black font-angel text-8xl">Welcome</h2>
-                    <p ref={addToRefs} className="text-black font-bitter text-xl tracking-wide">
-                        Howdy! My name is Richy, a software engineer and ethical hacker based
-                        in Liverpool, UK, with a passion for all things tech. With a Bachelors
-                        Degree in Computer Science and First Class Honours, I've been
-                        immersing myself in the world of coding and hacking for the past 8
-                        years. My journey has equipped me with extensive experience,
-                        especially in working with major retail companies, where I've honed my
-                        skills to tackle complex challenges and safeguard digital landscapes.
-                    </p>
-                    <p ref={addToRefs} className="text-black font-bitter text-xl tracking-wide">
-                        When I'm not dissecting code or exploring new vulnerabilities, you’ll
-                        find me deep in the realms of horror fiction and metal and punk music.
-                        My love for these genres fuels my creativity and drive, both in and out
-                        of the tech world. Every day, I’m excited to blend my technical
-                        expertise with my personal passions, pushing boundaries and finding
-                        innovative solutions.
-                    </p>
-                    <p ref={addToRefs} className="text-black font-bitter text-xl tracking-wide">
-                        Feel free to contact me, unless it’s about Java.. that’s the real horror!
+            <section className="w-full flex flex-row justify-center items-center p-8">
+                <div className="bio p-8 flex flex-col gap-8 max-w-3xl text-xl">
+                    <h2
+                        ref={h2Ref}
+                        className="text-slate-100 font-angel text-6xl sm:text-7xl mt-5 drop-shadow-[0_0_15px_rgba(0,255,255,0.25)]"
+                    >
+                        Welcome 👋
+                    </h2>
+
+                    <p
+                        ref={addToRefs}
+                        className="text-slate-200 font-bitter text-lg tracking-wide leading-relaxed"
+                    >
+                        Hey there! I’m <strong>Richy</strong> — a{" "}
+                        <strong>Lead AI / Cybersecurity Engineer</strong> based in Liverpool,
+                        UK. I build systems that think, defend, and evolve beyond human limits.
                     </p>
 
-                    <div ref={copyContainerRef} className="copy-container flex flex-row gap-6 items-center">
-                        <p className="text-black font-bitter tracking-wide text-xl"><strong>Email:</strong> re4p3r2024@gmail.com</p>
-                        <CopyToClipboard text="re4p3r2024@gmail.com" onCopy={() => setCopied(true)}>
-                            <Button ref={buttonRef} className="copybtn text-white text-2xl p-6 font-angel">{copied ? "Copied!" : "Copy Email"}</Button>
+                    <p
+                        ref={addToRefs}
+                        className="text-slate-300 font-bitter text-lg tracking-wide leading-relaxed"
+                    >
+                        With a First-Class Honours degree in Computer Science and over a decade
+                        in software engineering, I’ve developed AI models that detect leukaemia
+                        years before symptoms appear, created honeypots that trap attackers
+                        inside virtual environments, and built secure, scalable platforms for
+                        major retail brands.
+                    </p>
+
+                    <p
+                        ref={addToRefs}
+                        className="text-slate-300 font-bitter text-lg tracking-wide leading-relaxed"
+                    >
+                        I love blending creativity with computation — practical, ethical, and
+                        sometimes a little unpredictable. Feel free to reach out… unless it’s
+                        about Java ☕ — that’s still terrifying. 💀
+                    </p>
+
+                    <div
+                        ref={copyContainerRef}
+                        className="copy-container flex flex-row gap-6 items-center mt-6"
+                    >
+                        <p className="text-slate-200 font-bitter tracking-wide text-xl">
+                            <strong>Email:</strong> re4p3r2024@gmail.com
+                        </p>
+                        <CopyToClipboard
+                            text="re4p3r2024@gmail.com"
+                            onCopy={() => setCopied(true)}
+                        >
+                            <Button
+                                ref={buttonRef}
+                                className="copybtn text-white text-2xl px-6 py-4 font-angel bg-cyan-700 hover:bg-cyan-600 transition-all duration-200 shadow-lg shadow-cyan-900"
+                            >
+                                {copied ? "Copied! ✅" : "Copy Email"}
+                            </Button>
                         </CopyToClipboard>
                     </div>
                 </div>
-                <div ref={slideInRef} className="font-monsterParty monster">
+
+                {/* Mask character */}
+                <div
+                    ref={maskRef}
+                    className="font-monsterParty monster text-[7rem] text-cyan-500 drop-shadow-[0_0_10px_rgba(0,255,255,0.3)] ml-8 select-none"
+                >
                     Q
                 </div>
             </section>

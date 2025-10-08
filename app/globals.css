@@ -8,9 +8,21 @@
   font-weight: normal;
   font-style: normal;
 }
+@font-face {
+  font-family: "typewriter";
+  src: url("/fonts/typewriter.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
 
 .font-monsterParty {
   font-size: 25rem;
+}
+
+.font-typeWriter {
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 @layer base {
@@ -83,6 +95,7 @@
   font-size: 10rem;
   background: linear-gradient(90deg, rgb(36, 35, 35), rgb(225, 51, 51));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

@@ -108,7 +108,7 @@ const config = {
         gothic: ['"Gothical"', "sans-serif"],
         angel: ['"Angel wish"', "sans-serif"],
         monsterParty: ['"Monster Party"', "sans-serif"],
-        bitter: ['"Bitter"', "sans-serif"],
+        typeWriter: ['"typewriter"', "sans-serif"],
       },
       backgroundColor: {
         LFCbg: "#dc0714;",
