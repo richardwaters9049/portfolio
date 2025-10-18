@@ -15,7 +15,7 @@ const Nav = forwardRef<HTMLElement>((props, ref) => {
     };
 
     return (
-        <nav ref={ref} className="navbar p-4">
+        <nav ref={ref} className="navbar p-4 w-full">
             <div className="flex justify-between items-center">
                 <Link
                     className="text-white font-angel text-6xl tracking-widest"

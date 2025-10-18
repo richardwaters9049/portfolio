@@ -124,14 +124,14 @@ const Home: React.FC = () => {
         animationData={batAnimation}
         loop
         autoplay={false}
-        className="absolute w-[320px] drop-shadow-[0_0_150px_rgba(255,0,0,0.9)]"
+        className="absolute w-[450px] drop-shadow-[0_0_150px_rgba(255,0,0,0.9)]"
       />
 
       {/* Text */}
       <h1 ref={h1Ref} className="font-angel text-9xl z-10">
         Richy Rose
       </h1>
-      <p ref={p1Ref} className="font-typeWriter text-2xl tracking-widest z-10">
+      <p ref={p1Ref} className="font-typeWriter text-4xl tracking-widest z-10">
         Lead AI & Cybersecurity Engineer
       </p>
       <p ref={p2Ref} className="font-typeWriter italic text-2xl tracking-widest z-10">
@@ -141,7 +141,7 @@ const Home: React.FC = () => {
       <Button
         ref={buttonRef}
         onClick={handleEnter}
-        className="text-5xl font-angel p-8 m-8 tracking-widest bg-cyan-700 hover:bg-cyan-600 shadow-lg shadow-cyan-800/50 z-10 transition-transform duration-100"
+        className="text-4xl font-angel p-8 mt-4 tracking-widest bg-cyan-700 hover:bg-cyan-600 shadow-lg shadow-cyan-800/50 z-10 transition-transform duration-100"
       >
         Enter
       </Button>

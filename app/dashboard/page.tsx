@@ -115,9 +115,9 @@ const Page: React.FC = () => {
                 <div className="bio p-8 flex flex-col gap-8 max-w-3xl text-xl">
                     <h2
                         ref={h2Ref}
-                        className="text-slate-100 font-angel text-6xl sm:text-7xl mt-5 drop-shadow-[0_0_15px_rgba(0,255,255,0.25)]"
+                        className="text-slate-100 font-angel text-9xl mt-5 drop-shadow-[0_0_15px_rgba(0,255,255,0.25)]"
                     >
-                        Welcome 👋
+                        Welcome <span className="text-cyan-500 text-6xl">👋</span>
                     </h2>
 
                     <p
@@ -173,7 +173,7 @@ const Page: React.FC = () => {
                 {/* Mask character */}
                 <div
                     ref={maskRef}
-                    className="font-monsterParty monster text-[7rem] text-cyan-500 drop-shadow-[0_0_10px_rgba(0,255,255,0.3)] ml-8 select-none"
+                    className="font-monsterParty monster text-3xl text-cyan-500 drop-shadow-[0_0_10px_rgba(0,255,255,0.3)] ml-8 select-none"
                 >
                     Q
                 </div>
