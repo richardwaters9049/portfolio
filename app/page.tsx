@@ -128,7 +128,7 @@ const Home: React.FC = () => {
       />
 
       {/* Text */}
-      <h1 ref={h1Ref} className="font-angel text-7xl z-10">
+      <h1 ref={h1Ref} className="font-angel text-9xl z-10">
         Richy Rose
       </h1>
       <p ref={p1Ref} className="font-typeWriter text-2xl tracking-widest z-10">
@@ -141,7 +141,7 @@ const Home: React.FC = () => {
       <Button
         ref={buttonRef}
         onClick={handleEnter}
-        className="text-5xl font-angel p-8 m-8 tracking-widest bg-cyan-700 hover:bg-cyan-600 shadow-lg shadow-cyan-800/50 z-10 transition-transform duration-150"
+        className="text-5xl font-angel p-8 m-8 tracking-widest bg-cyan-700 hover:bg-cyan-600 shadow-lg shadow-cyan-800/50 z-10 transition-transform duration-100"
       >
         Enter
       </Button>
