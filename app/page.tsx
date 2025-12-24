@@ -132,7 +132,7 @@ const Home: React.FC = () => {
         Richy Rose
       </h1>
       <p ref={p1Ref} className="font-typeWriter text-4xl tracking-widest z-10">
-        Lead AI & Cybersecurity Engineer
+        AI & Cybersecurity Engineer
       </p>
       <p ref={p2Ref} className="font-typeWriter italic text-2xl tracking-widest z-10">
         "Building Systems Beyond Human Capability"
