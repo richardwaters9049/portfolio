@@ -98,7 +98,7 @@ const Page: React.FC = () => {
         >
             <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-3 p-8 justify-items-center items-start">
                 {/* Text Content */}
-                <div className="bio p-6 flex flex-col gap-6">
+                <div className="bio p-6 flex flex-col gap-8">
                     <h2
                         ref={h2Ref}
                         className="text-slate-100 font-angel text-9xl  drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] tracking-wider bg-clip-text text-transparent bg-gradient-to-b from-teal-500 to-white"
