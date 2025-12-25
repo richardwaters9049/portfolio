@@ -131,10 +131,10 @@ const Home: React.FC = () => {
       <h1 ref={h1Ref} className="r_rose font-angel z-10 bg-clip-text text-transparent bg-gradient-to-b from-white to-red-900">
         Richy Rose
       </h1>
-      <p ref={p1Ref} className="font-typeWriter text-4xl tracking-widest z-10">
+      <p ref={p1Ref} className="font-bitter text-4xl tracking-widest z-10">
         AI & Cybersecurity Engineer
       </p>
-      <p ref={p2Ref} className="font-typeWriter italic text-2xl tracking-widest z-10">
+      <p ref={p2Ref} className="font-bitter italic text-2xl tracking-widest z-10">
         "Building Systems Beyond Human Capability"
       </p>
 
