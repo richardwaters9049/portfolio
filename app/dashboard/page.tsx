@@ -98,7 +98,7 @@ const Page: React.FC = () => {
         >
             <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-3 p-8 justify-items-center items-start">
                 {/* Text Content */}
-                <div className="bio p-6 flex flex-col gap-8">
+                <div className="bio p-6 flex flex-col gap-12">
                     <h2
                         ref={h2Ref}
                         className="text-slate-100 font-angel text-9xl  drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] tracking-wider bg-clip-text text-transparent bg-gradient-to-b from-teal-500 to-white"
@@ -171,13 +171,14 @@ const Page: React.FC = () => {
                                 <span>Projects</span>
                             </Link>
                             <Link
-                                href="mailto:richardwaters866@gmail.com"
+                                href="/animations/files/RW-CV-Oct25.pdf"
+                                download="RichardWaters-CV-Oct25.pdf"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex flex-col items-center underline underline-offset-4 text-xl"
+                                className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
                             >
                                 <FaFilePdf className="text-4xl mb-3 text-red-600" />
-                                <span>CV</span>
+                                <span>Download CV</span>
                             </Link>
                         </div>
 
