@@ -108,7 +108,7 @@ const Page: React.FC = () => {
 
                     <p
                         ref={addToRefs}
-                        className="text-slate-200 font-bitter text-xl tracking-wider leading-relaxed"
+                        className="text-slate-200 font-bitter text-2xl tracking-wider leading-relaxed"
                     >
                         Hey there! I’m <strong>Richy</strong> — a{" "}
                         <strong>Lead AI / Cybersecurity Engineer</strong> based in Liverpool,
@@ -117,7 +117,7 @@ const Page: React.FC = () => {
 
                     <p
                         ref={addToRefs}
-                        className="text-slate-300 font-bitter text-xl tracking-wider leading-relaxed"
+                        className="text-slate-300 font-bitter text-2xl tracking-wider leading-relaxed"
                     >
                         With a First-Class Honours degree in Computer Science and over a
                         decade in software engineering, I’ve developed AI models that detect
@@ -128,7 +128,7 @@ const Page: React.FC = () => {
 
                     <p
                         ref={addToRefs}
-                        className="text-slate-300 font-bitter text-xl tracking-wider leading-relaxed"
+                        className="text-slate-300 font-bitter text-2xl tracking-wider leading-relaxed"
                     >
                         I love blending creativity with computation — practical, ethical,
                         and sometimes a little unpredictable. Feel free to reach out… unless
@@ -195,7 +195,7 @@ const Page: React.FC = () => {
                             >
                                 <Button
                                     ref={buttonRef}
-                                    className="copybtn text-white text-2xl px-6 py-7 font-angel bg-green-600 hover:bg-cyan-900 transition-all duration-200 shadow-lg shadow-cyan-900"
+                                    className="copybtn text-white text-2xl px-6 py-7 font-angel bg-green-600 hover:bg-teal-900 transition-all duration-200 shadow-lg shadow-cyan-900"
                                 >
                                     {copied ? "Copied! ✅" : "Copy Email"}
                                 </Button>
