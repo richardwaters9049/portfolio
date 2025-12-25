@@ -154,7 +154,7 @@ const Page: React.FC = () => {
                     <div className="speach-bubble-container mt-6">
                         <div className="speach-bubble bg-transparenttext-white p-6 rounded-lg shadow-lg font-bitter grid grid-cols-3 gap-4 justify-items-center items-center">
                             <Link
-                                href="https://github.com/richy2024"
+                                href="https://github.com/richardwaters9049"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
