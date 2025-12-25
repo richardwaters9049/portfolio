@@ -143,8 +143,8 @@ const Page: React.FC = () => {
                     <Image
                         src={ScreamImg}
                         alt="Scream"
-                        width={380}
-                        height={380}
+                        width={420}
+                        height={420}
                         className="object-contain drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] rounded-lg"
                         priority
                     />
@@ -165,9 +165,9 @@ const Page: React.FC = () => {
                                 href="https://linkedin.com/in/richy2024"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex flex-col items-center underline underline-offset-4 text-xl"
+                                className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
                             >
-                                <FaProjectDiagram className="text-4xl mb-3 text-orange-500" />
+                                <FaProjectDiagram className="text-5xl mb-3 text-orange-500" />
                                 <span>Projects</span>
                             </Link>
                             <Link
@@ -177,7 +177,7 @@ const Page: React.FC = () => {
                                 rel="noopener noreferrer"
                                 className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
                             >
-                                <FaFilePdf className="text-4xl mb-3 text-red-600" />
+                                <FaFilePdf className="text-5xl mb-3 text-red-600" />
                                 <span>Download CV</span>
                             </Link>
                         </div>
