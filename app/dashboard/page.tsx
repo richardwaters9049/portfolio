@@ -144,8 +144,8 @@ const Page: React.FC = () => {
                     <Image
                         src={ScreamImg}
                         alt="Scream"
-                        width={500}
-                        height={500}
+                        width={400}
+                        height={400}
                         className="object-contain drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] rounded-lg"
                         priority
                     />
