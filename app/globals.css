@@ -99,11 +99,9 @@
   -webkit-text-fill-color: transparent;
 }
 
-.copybtn,
-.navbar,
-button {
+/* .copybtn {
   background: linear-gradient(90deg, rgb(36, 35, 35), rgb(225, 51, 51));
-}
+} */
 
 .blog-container {
   background-image: url("/images/liverbrd.png");
@@ -130,11 +128,11 @@ button {
     text-align: center;
   }
 
-  .copy-container {
+  /* .copy-container {
     width: 100%;
     text-align: center;
     justify-content: center;
-  }
+  } */
 
   .monster {
     display: none;
@@ -142,4 +140,27 @@ button {
 
   @media screen and (max-width: 767px) {
   }
+}
+
+.r_rose {
+  font-size: 12rem;
+}
+
+/* === Bubble Container === */
+.bubble-content {
+  position: relative;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: space-around;
+
+  padding: 1.25rem 1.75rem;
+  background: white;
+  color: black;
+
+  border-radius: 28px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.05);
+
+  font-family: "Bitter", serif;
 }

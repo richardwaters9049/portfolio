@@ -109,6 +109,7 @@ const config = {
         angel: ['"Angel wish"', "sans-serif"],
         monsterParty: ['"Monster Party"', "sans-serif"],
         typeWriter: ['"typewriter"', "sans-serif"],
+        bitter: ['"Bitter-Medium"', "sans-serif"],
       },
       backgroundColor: {
         LFCbg: "#dc0714;",

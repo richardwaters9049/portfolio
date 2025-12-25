@@ -97,8 +97,8 @@ const Home: React.FC = () => {
       onComplete: () => router.push("/dashboard"),
     });
 
-    // Idle flapping for 3.5 seconds
-    tl.to(batEl, { duration: 3.5, y: "-=0", ease: "power1.inOut" })
+    // Idle flapping for 2 seconds
+    tl.to(batEl, { duration: 2, y: "-=0", ease: "power1.inOut" })
       // Fly off upwards with fade
       .to(
         batEl,
@@ -128,7 +128,7 @@ const Home: React.FC = () => {
       />
 
       {/* Text */}
-      <h1 ref={h1Ref} className="font-angel text-9xl z-10">
+      <h1 ref={h1Ref} className="r_rose font-angel z-10 bg-clip-text text-transparent bg-gradient-to-b from-white to-red-900">
         Richy Rose
       </h1>
       <p ref={p1Ref} className="font-typeWriter text-4xl tracking-widest z-10">
@@ -141,9 +141,15 @@ const Home: React.FC = () => {
       <Button
         ref={buttonRef}
         onClick={handleEnter}
-        className="text-4xl font-angel p-8 mt-4 tracking-widest bg-cyan-700 hover:bg-cyan-600 shadow-lg shadow-cyan-800/50 z-10 transition-transform duration-100"
+        className="text-6xl font-angel p-8 mt-4 tracking-widest z-10 
+           bg-transparent border-none hover:bg-transparent
+           relative group"
       >
-        Enter
+        <span className="relative">
+          Enter
+          <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-slate-200 
+                    transition-all duration-300 group-hover:w-full"></span>
+        </span>
       </Button>
     </main>
   );
