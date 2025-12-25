@@ -135,7 +135,7 @@ const Home: React.FC = () => {
         AI & Cybersecurity Engineer
       </p>
       <p ref={p2Ref} className="font-bitter italic text-2xl tracking-widest z-10">
-        "Building Systems Beyond Human Capability"
+        Building Systems Beyond Human Capability
       </p>
 
       <Button
