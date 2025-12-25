@@ -157,9 +157,9 @@ const Page: React.FC = () => {
                                 href="https://github.com/richy2024"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex flex-col items-center underline underline-offset-4 text-xl"
+                                className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
                             >
-                                <FaGithub className="text-4xl mb-3" />
+                                <FaGithub className="text-5xl mb-3 text-purple-800" />
                                 <span>GitHub</span>
                             </Link>
                             <Link
@@ -168,16 +168,16 @@ const Page: React.FC = () => {
                                 rel="noopener noreferrer"
                                 className="flex flex-col items-center underline underline-offset-4 text-xl"
                             >
-                                <FaProjectDiagram className="text-4xl mb-3" />
+                                <FaProjectDiagram className="text-4xl mb-3 text-orange-500" />
                                 <span>Projects</span>
                             </Link>
                             <Link
-                                href="mailto:re4p3r2024@gmail.com"
+                                href="mailto:richardwaters866@gmail.com"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex flex-col items-center underline underline-offset-4 text-xl"
                             >
-                                <FaFilePdf className="text-4xl mb-3" />
+                                <FaFilePdf className="text-4xl mb-3 text-red-600" />
                                 <span>CV</span>
                             </Link>
                         </div>
@@ -190,7 +190,7 @@ const Page: React.FC = () => {
                                 <strong className="text-2xl mb-2">Email:</strong> richardwaters866@gmail.com
                             </p>
                             <CopyToClipboard
-                                text="re4p3r2024@gmail.com"
+                                text="richardwaters866@gmail.com"
                                 onCopy={() => setCopied(true)}
                             >
                                 <Button
