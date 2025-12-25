@@ -108,16 +108,15 @@ const Page: React.FC = () => {
 
                     <p
                         ref={addToRefs}
-                        className="text-slate-200 font-bitter text-2xl tracking-wider leading-relaxed"
+                        className="text-slate-200 font-bitter text-xl tracking-wider leading-relaxed"
                     >
-                        Hey there! I’m <strong>Richy</strong> — a{" "}
-                        <strong>Lead AI / Cybersecurity Engineer</strong> based in Liverpool,
-                        UK. I build systems that think, defend, and evolve beyond human limits.
+                        Hello, I’m Richy.<br></br>
+                        An AI / Cybersecurity Engineer based in Liverpool, UK. <br></br> I build systems that think, defend, and evolve beyond human limits.
                     </p>
 
                     <p
                         ref={addToRefs}
-                        className="text-slate-300 font-bitter text-2xl tracking-wider leading-relaxed"
+                        className="text-slate-300 font-bitter text-xl tracking-wider leading-relaxed"
                     >
                         With a First-Class Honours degree in Computer Science and over a
                         decade in software engineering, I’ve developed AI models that detect
@@ -128,10 +127,10 @@ const Page: React.FC = () => {
 
                     <p
                         ref={addToRefs}
-                        className="text-slate-300 font-bitter text-2xl tracking-wider leading-relaxed"
+                        className="text-slate-300 font-bitter text-xl tracking-wider leading-relaxed"
                     >
                         I love blending creativity with computation — practical, ethical,
-                        and sometimes a little unpredictable. Feel free to reach out… unless
+                        and sometimes a little fun. Feel free to reach out… unless
                         it’s about Java ☕ — that’s still terrifying. 💀
                     </p>
                 </div>
@@ -204,7 +203,7 @@ const Page: React.FC = () => {
                     </div>
                 </div>
             </section>
-        </main>
+        </main >
     );
 };
 
