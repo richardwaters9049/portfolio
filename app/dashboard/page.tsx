@@ -101,7 +101,7 @@ const Page: React.FC = () => {
                 <div className="bio p-6 flex flex-col gap-12">
                     <h2
                         ref={h2Ref}
-                        className="text-slate-100 font-angel text-9xl  drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] tracking-wider bg-clip-text text-transparent bg-gradient-to-b from-teal-500 to-white"
+                        className="text-slate-100 font-angel text-8xl  drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] tracking-wider bg-clip-text text-transparent bg-gradient-to-b from-teal-500 to-white first-letter:text-9xl first-letter:uppercase"
                     >
                         Welcome
                     </h2>
@@ -162,7 +162,7 @@ const Page: React.FC = () => {
                                 <span>GitHub</span>
                             </Link>
                             <Link
-                                href="https://linkedin.com/in/richy2024"
+                                href="/projects"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
