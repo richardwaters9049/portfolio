@@ -163,7 +163,6 @@ const Page: React.FC = () => {
                             </Link>
                             <Link
                                 href="/projects"
-                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
                             >
