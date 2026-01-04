@@ -75,7 +75,7 @@ export default function Projects() {
 
                 <p className="mt-4 text-2xl text-gray-700 leading-relaxed font-bitter tracking-wider text-center max-w-3xl">
                     A curated selection of applied systems exploring artificial
-                    intelligence, cybersecurity, and real-world problem solving. Each
+                    intelligence, cybersecurity, and real-world problem solving. <br></br>Each
                     project is built as a functional proof-of-concept, prioritising clarity,
                     performance, and intent.
                 </p>
