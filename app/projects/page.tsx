@@ -69,11 +69,13 @@ export default function Projects() {
                 <span>Back</span>
             </Link>
             <div className="w-full flex flex-col items-center mb-10">
-                <h1 className="font-angel r_rose text-center">
+                <h1
+                    className="text-slate-100 font-angel text-8xl  drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] tracking-wider bg-clip-text text-transparent bg-gradient-to-b from-black to-gray-500 first-letter:text-9xl first-letter:uppercase mb-10"
+                >
                     Projects
                 </h1>
 
-                <p className="mt-4 text-2xl text-gray-700 leading-relaxed font-bitter tracking-wider text-center max-w-3xl">
+                <p className="mt-4 text-xl text-gray-700 leading-relaxed font-bitter tracking-wider text-center max-w-3xl">
                     A curated selection of applied systems exploring artificial
                     intelligence, cybersecurity, and real-world problem solving. <br></br>Each
                     project is built as a functional proof-of-concept, prioritising clarity,
@@ -90,14 +92,24 @@ export default function Projects() {
                         <Link href="https://demo-link.com" className="btn font-bitter underline-offset-4 underline">Demo</Link>
                     </div>
                 </div>
-                <div className="pro-2 flex flex-col gap-5 p-6">
+                <div className="pro-1 flex flex-col gap-6 p-6">
                     <h2 className="font-bitter text-3xl tracking-wider underline underline-offset-4">LukaScope</h2>
-                    <p className="font-bitter text-lg tracking-wider">AI-driven system for early leukaemia detection, leveraging longitudinal medical data and predictive modelling.</p>
+                    <p className="font-bitter text-lg tracking-wider">GPU-accelerated password cracking system built for security research, benchmarking, and threat modelling.</p>
+                    <div className="btn-container flex gap-5">
+                        <Link href="https://github.com/yourname/password-cracker" className="btn font-bitter underline-offset-4 underline">GitHub</Link>
+                        <Link href="https://demo-link.com" className="btn font-bitter underline-offset-4 underline">Demo</Link>
+                    </div>
                 </div>
-                <div className="pro-3 flex flex-col gap-5 p-6">
-                    <h2 className="font-bitter text-3xl tracking-wider underline underline-offset-4">Security Automation Toolkit</h2>
-                    <p className="font-bitter text-lg tracking-wider">CLI-first toolkit automating reconnaissance, audits, and repeatable security workflows.</p>
+                <div className="pro-1 flex flex-col gap-6 p-6">
+                    <h2 className="font-bitter text-3xl tracking-wider underline underline-offset-4">LukaScope</h2>
+                    <p className="font-bitter text-lg tracking-wider">GPU-accelerated password cracking system built for security research, benchmarking, and threat modelling.</p>
+                    <div className="btn-container flex gap-5">
+                        <Link href="https://github.com/yourname/password-cracker" className="btn font-bitter underline-offset-4 underline">GitHub</Link>
+                        <Link href="https://demo-link.com" className="btn font-bitter underline-offset-4 underline">Demo</Link>
+                    </div>
                 </div>
+
+
             </section>
 
         </section>

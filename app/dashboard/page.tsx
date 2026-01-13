@@ -135,7 +135,7 @@ const Page: React.FC = () => {
                     </p>
                 </div>
 
-                {/* Image + Speech Bubble */}
+                {/* Image */}
                 <div
                     ref={screamWrapRef}
                     className="scream-img p-6 relative flex flex-col gap-12 justify-center items-center"
@@ -149,9 +149,9 @@ const Page: React.FC = () => {
                         priority
                     />
 
-                    {/* Speech Bubble - Social Links */}
-                    <div className="speach-bubble-container mt-6">
-                        <div className="speach-bubble bg-transparenttext-white p-6 rounded-lg shadow-lg font-bitter grid grid-cols-3 gap-4 justify-items-center items-center">
+                    {/* Social Links */}
+                    <div className="social-container mt-6">
+                        <div className="social-inner-container bg-transparenttext-white p-6 rounded-lg shadow-lg font-bitter grid grid-cols-3 gap-4 justify-items-center items-center">
                             <Link
                                 href="https://github.com/richardwaters9049"
                                 target="_blank"
