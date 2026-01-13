@@ -192,3 +192,12 @@
   border-left: 2px solid #ccc;
   border-top: 2px solid #ccc;
 }
+
+.project-title {
+  font-size: 8rem;
+}
+
+.project-title::first-letter {
+  text-transform: capitalize;
+  font-size: 10rem;
+}

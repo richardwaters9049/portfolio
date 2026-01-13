@@ -1,42 +1,66 @@
 'use client';
 
-import { Fullscreen } from 'lucide-react';
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
+import gsap from 'gsap';
 
-const JasonVid = () => {
+type JasonVidProps = {
+    onFinish?: () => void;
+};
+
+const JasonVid = ({ onFinish }: JasonVidProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    const toggleFullscreen = () => {
-        if (!videoRef.current) return;
+    // Fade IN container/video on mount
+    useEffect(() => {
+        if (!containerRef.current || !videoRef.current) return;
 
-        if (!document.fullscreenElement) {
-            videoRef.current.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable fullscreen: ${err.message}`);
-            });
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
+        // container is black, fade in video itself
+        gsap.fromTo(
+            videoRef.current,
+            { opacity: 0, scale: 1.02 },
+            {
+                opacity: 1,
+                scale: 1,
+                duration: 0.8,
+                ease: 'power2.out',
             }
-        }
-    };
+        );
+    }, []);
+
+    // Handle video end
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video || !onFinish) return;
+
+        const handleEnded = () => {
+            // Fade out video to reveal black and then navigate
+            gsap.to(video, {
+                opacity: 0,
+                scale: 0.98,
+                duration: 0.6,
+                ease: 'power2.in',
+                onComplete: onFinish,
+            });
+        };
+
+        video.addEventListener('ended', handleEnded);
+        return () => video.removeEventListener('ended', handleEnded);
+    }, [onFinish]);
 
     return (
-        <div className='relative w-full h-screen p-8 bg-black'>
+        <div
+            ref={containerRef}
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+        >
             <video
                 ref={videoRef}
                 src="/animations/jason-hack.mp4"
                 autoPlay
-                loop
                 muted
-                className='w-full h-full object-contain'
+                playsInline
+                className="w-full h-full object-cover"
             />
-            <button
-                onClick={toggleFullscreen}
-                className='absolute bottom-4 right-4 p-2 bg-black/50 text-white rounded-full hover:bg-black/75 transition-colors'
-                aria-label='Toggle fullscreen'
-            >
-                <Fullscreen size={10} />
-            </button>
         </div>
     );
 };
