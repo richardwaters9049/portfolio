@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { FaArrowLeft } from "react-icons/fa";
-import LeftArrow from "@/public/images/barrow.png";
 import Link from "next/link";
 
 const projects = [
