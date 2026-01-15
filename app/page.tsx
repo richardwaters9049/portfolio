@@ -129,7 +129,7 @@ const Home: React.FC = () => {
 
       {/* Text */}
       <h1 ref={h1Ref} className="r_rose font-angel z-10 bg-clip-text text-transparent bg-gradient-to-b from-white to-red-900">
-        Richy W
+        Richard Waters
       </h1>
       <p ref={p1Ref} className="font-bitter text-4xl tracking-widest z-10">
         Software/AI & Cybersecurity Engineer

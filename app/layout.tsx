@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Richy Rose - Developer",
+  title: "Rich W - Developer",
   description: "Portfolio of Richy Rose, an Ethical Hacker and Developer.",
 };
 
