@@ -155,12 +155,14 @@ export default function Projects() {
                             <div className="flex gap-6 font-bitter max-[765px]:justify-center">
                                 <Link
                                     href={project.github}
+                                    target="_blank"
                                     className="underline underline-offset-4 hover:opacity-70 transition"
                                 >
                                     GitHub
                                 </Link>
                                 <Link
                                     href={project.demo}
+                                    target="_blank"
                                     className="underline underline-offset-4 hover:opacity-70 transition"
                                 >
                                     Demo
