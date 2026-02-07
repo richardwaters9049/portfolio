@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
 import gsap from "gsap";
+import Demowindow from "@/components/ui/demo-window";
 
 const projects = [
     {
@@ -14,7 +15,7 @@ const projects = [
             "GPU-accelerated password cracking system built for security research, benchmarking, and threat modelling.",
         image: "/images/pw-crack-img.png",
         github: "https://github.com/yourname/password-cracker",
-        demo: "https://demo-link.com",
+        demo: "https://password-cracker.onrender.com/"
     },
     {
         id: "02",
@@ -30,7 +31,7 @@ const projects = [
         title: "Security Automation Toolkit",
         description:
             "CLI-first toolkit automating reconnaissance, audits, and repeatable security workflows.",
-        image: "/projects/toolkit.png",
+        image: "/images/pw-crack-img.png",
         github: "https://github.com/yourname/security-toolkit",
         demo: "https://demo-link.com",
     },
@@ -115,6 +116,11 @@ export default function Projects() {
                 >
                     Projects
                 </h1>
+
+                {/* Demo Window Content */}
+
+                {/* <Demowindow /> */}
+
 
                 <p
                     ref={subtitleRef}

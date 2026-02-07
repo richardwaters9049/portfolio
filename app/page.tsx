@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { useRouter } from "next/navigation";
 import Lottie, { LottieRefCurrentProps } from "lottie-react";
 import batAnimation from "@/public/animations/bat.json";
-
+// Adding a note to test commit changes.
 const Home: React.FC = () => {
   const mainRef = useRef<HTMLDivElement>(null);
   const h1Ref = useRef<HTMLHeadingElement>(null);
@@ -45,7 +45,7 @@ const Home: React.FC = () => {
         .fromTo(p2Ref.current, { opacity: 0, x: 50 }, { opacity: 1, x: 0 }, "-=0.3")
         .fromTo(buttonRef.current, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1 }, "+=0.2");
 
-      // Add subtle idle float for the bat
+      // Add a subtle idle float for the bat
       gsap.to(batEl, {
         y: "-=10",
         duration: 2,
