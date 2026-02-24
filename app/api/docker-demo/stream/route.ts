@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 export const runtime = "nodejs";
@@ -21,6 +22,31 @@ function splitOutput(output: string) {
     .replace(/\r/g, "\n")
     .split("\n")
     .filter((line) => line.trim() !== "");
+}
+
+const SKIP_DIRS = new Set([".git", "node_modules", ".next", "dist", "build"]);
+
+async function findDockerfile(repoDir: string, depth = 0): Promise<string | null> {
+  if (depth > 5) return null;
+
+  const entries = await readdir(repoDir, { withFileTypes: true });
+  const rootDockerfile = entries.find(
+    (entry) => entry.isFile() && entry.name.toLowerCase() === "dockerfile"
+  );
+  if (rootDockerfile) {
+    return path.join(repoDir, rootDockerfile.name);
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (SKIP_DIRS.has(entry.name)) continue;
+
+    const nestedPath = path.join(repoDir, entry.name);
+    const nestedDockerfile = await findDockerfile(nestedPath, depth + 1);
+    if (nestedDockerfile) return nestedDockerfile;
+  }
+
+  return null;
 }
 
 function runCommand(
@@ -94,7 +120,7 @@ export async function GET(request: Request) {
           controller.enqueue(eventChunk("log", { line }));
         });
 
-        const commands = [
+        const setupCommands = [
           {
             line: `$ rm -rf ${repoDir}`,
             command: `rm -rf ${escapeShellArg(repoDir)}`,
@@ -107,9 +133,35 @@ export async function GET(request: Request) {
             line: `$ cd ${safeRepoName}`,
             command: `test -d ${escapeShellArg(repoDir)}`,
           },
+        ];
+
+        for (const step of setupCommands) {
+          controller.enqueue(eventChunk("command", { line: step.line }));
+
+          await runCommand(step.command, undefined, (line) => {
+            controller.enqueue(eventChunk("log", { line }));
+          });
+        }
+
+        const dockerfilePath = await findDockerfile(repoDir);
+        if (!dockerfilePath) {
+          throw new Error(
+            `No Dockerfile found in ${repoDir}. Add a Dockerfile or move one into this repository.`
+          );
+        }
+
+        const buildContext = path.dirname(dockerfilePath);
+        const buildLine =
+          buildContext === repoDir
+            ? `$ docker build -t ${imageName} .`
+            : `$ docker build -t ${imageName} -f ${dockerfilePath} ${buildContext}`;
+
+        const runCommands = [
           {
-            line: `$ docker build -t ${imageName} .`,
-            command: `docker build -t ${escapeShellArg(imageName)} ${escapeShellArg(repoDir)}`,
+            line: buildLine,
+            command: `docker build -t ${escapeShellArg(imageName)} -f ${escapeShellArg(
+              dockerfilePath
+            )} ${escapeShellArg(buildContext)}`,
           },
           {
             line: `$ docker rm -f ${containerName} || true`,
@@ -121,7 +173,7 @@ export async function GET(request: Request) {
           },
         ];
 
-        for (const step of commands) {
+        for (const step of runCommands) {
           controller.enqueue(eventChunk("command", { line: step.line }));
 
           await runCommand(step.command, undefined, (line) => {
