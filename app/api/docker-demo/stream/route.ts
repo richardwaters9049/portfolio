@@ -122,8 +122,8 @@ function jsonCommand(command: string) {
 async function createDockerfileIfMissing(repoDir: string): Promise<{
   dockerfilePath: string;
   previewPort: number;
-  source: "generated-node" | "generated-python";
-} | null> {
+  source: "generated-node" | "generated-python" | "generated-generic";
+}> {
   const packageJsonPath = await findFileByName(repoDir, "package.json");
   if (packageJsonPath) {
     const appDir = path.dirname(packageJsonPath);
@@ -182,7 +182,17 @@ CMD ${jsonCommand(runner)}
     return { dockerfilePath, previewPort, source: "generated-python" };
   }
 
-  return null;
+  const previewPort = 3000;
+  const dockerfilePath = path.join(repoDir, "Dockerfile");
+  const dockerfileContent = `FROM python:3.11-slim
+WORKDIR /app
+COPY . .
+EXPOSE ${previewPort}
+CMD ${jsonCommand(`python -m http.server ${previewPort} --bind 0.0.0.0`)}
+`;
+
+  await writeFile(dockerfilePath, dockerfileContent, "utf8");
+  return { dockerfilePath, previewPort, source: "generated-generic" };
 }
 
 function inferPortFromCompose(fileContents: string) {
@@ -299,20 +309,12 @@ export async function GET(request: Request) {
 
         if (!dockerfilePath && !composeFilePath) {
           const generated = await createDockerfileIfMissing(repoDir);
-          if (generated) {
-            dockerfilePath = generated.dockerfilePath;
-            generatedDockerPort = generated.previewPort;
-            controller.enqueue(
-              eventChunk("log", {
-                line: `> Auto-generated Dockerfile at ${generated.dockerfilePath} (${generated.source})`,
-              })
-            );
-          }
-        }
-
-        if (!dockerfilePath && !composeFilePath) {
-          throw new Error(
-            `No Dockerfile or docker compose file found in ${repoDir}, and no supported project type was detected for auto-generation.`
+          dockerfilePath = generated.dockerfilePath;
+          generatedDockerPort = generated.previewPort;
+          controller.enqueue(
+            eventChunk("log", {
+              line: `> Auto-generated Dockerfile at ${generated.dockerfilePath} (${generated.source})`,
+            })
           );
         }
 
