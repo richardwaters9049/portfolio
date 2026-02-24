@@ -36,12 +36,21 @@ const COMPOSE_FILE_NAMES = [
   "compose.yaml",
 ];
 
-async function findDockerfile(repoDir: string, depth = 0): Promise<string | null> {
+async function findDockerfile(
+  repoDir: string,
+  depth = 0,
+): Promise<string | null> {
   if (depth > 5) return null;
 
   const entries = await readdir(repoDir, { withFileTypes: true });
   const rootDockerfiles = entries
-    .filter((entry) => entry.isFile() && entry.name.toLowerCase().startsWith("dockerfile"))
+    .filter((entry) => {
+      const name = entry.name.toLowerCase();
+      return (
+        entry.isFile() &&
+        (name.startsWith("dockerfile") || name === "dockerfile.dockerhub")
+      );
+    })
     .sort((a, b) => {
       const aLower = a.name.toLowerCase();
       const bLower = b.name.toLowerCase();
@@ -62,15 +71,28 @@ async function findDockerfile(repoDir: string, depth = 0): Promise<string | null
     if (nestedDockerfile) return nestedDockerfile;
   }
 
+  // Check for dockerhub variant in current directory if no standard dockerfile found
+  const dockerhubFile = entries.find(
+    (entry) => entry.isFile() && entry.name === "Dockerfile.dockerhub",
+  );
+  if (dockerhubFile) {
+    return path.join(repoDir, dockerhubFile.name);
+  }
+
   return null;
 }
 
-async function findComposeFile(repoDir: string, depth = 0): Promise<string | null> {
+async function findComposeFile(
+  repoDir: string,
+  depth = 0,
+): Promise<string | null> {
   if (depth > 5) return null;
 
   const entries = await readdir(repoDir, { withFileTypes: true });
   for (const filename of COMPOSE_FILE_NAMES) {
-    const composeFile = entries.find((entry) => entry.isFile() && entry.name === filename);
+    const composeFile = entries.find(
+      (entry) => entry.isFile() && entry.name === filename,
+    );
     if (composeFile) {
       return path.join(repoDir, composeFile.name);
     }
@@ -91,12 +113,14 @@ async function findComposeFile(repoDir: string, depth = 0): Promise<string | nul
 async function findFileByName(
   repoDir: string,
   filename: string,
-  depth = 0
+  depth = 0,
 ): Promise<string | null> {
   if (depth > 5) return null;
 
   const entries = await readdir(repoDir, { withFileTypes: true });
-  const file = entries.find((entry) => entry.isFile() && entry.name === filename);
+  const file = entries.find(
+    (entry) => entry.isFile() && entry.name === filename,
+  );
   if (file) {
     return path.join(repoDir, file.name);
   }
@@ -132,8 +156,34 @@ function jsonCommand(command: string) {
 async function createDockerfileIfMissing(repoDir: string): Promise<{
   dockerfilePath: string;
   previewPort: number;
-  source: "generated-node" | "generated-python" | "generated-generic";
+  source:
+    | "generated-node"
+    | "generated-python"
+    | "generated-generic"
+    | "generated-docker-cli";
 }> {
+  // Check for Docker CLI tools (like docker_pyNext_v3)
+  const scriptsDir = await findFileByName(repoDir, "docker_pyNext_v3");
+  if (scriptsDir) {
+    const previewPort = DEFAULT_APP_PORT;
+    const dockerfilePath = path.join(repoDir, "Dockerfile");
+    const dockerfileContent = `FROM docker:27-cli
+
+RUN apk add --no-cache bash curl unzip libstdc++ libgcc
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$\{PATH}"
+
+COPY scripts/docker_pyNext_v3 /usr/local/bin/docker_pyNext_v3
+RUN chmod +x /usr/local/bin/docker_pyNext_v3
+
+WORKDIR /workspace
+EXPOSE ${previewPort}
+CMD ["sh", "-c", "echo 'Docker CLI tools ready. Use docker_pyNext_v3 <project-name> to start.' && tail -f /dev/null"]
+`;
+
+    await writeFile(dockerfilePath, dockerfileContent, "utf8");
+    return { dockerfilePath, previewPort, source: "generated-docker-cli" };
+  }
   const packageJsonPath = await findFileByName(repoDir, "package.json");
   if (packageJsonPath) {
     const appDir = path.dirname(packageJsonPath);
@@ -207,7 +257,7 @@ CMD ${jsonCommand(`python -m http.server ${previewPort} --bind 0.0.0.0`)}
 
 function inferPortFromCompose(fileContents: string) {
   const explicitDefaultPortMatch = fileContents.match(
-    new RegExp(`["']?(\\d{2,5}):${DEFAULT_APP_PORT}["']?`)
+    new RegExp(`["']?(\\d{2,5}):${DEFAULT_APP_PORT}["']?`),
   );
   if (explicitDefaultPortMatch) {
     return Number(explicitDefaultPortMatch[1]);
@@ -224,7 +274,7 @@ function inferPortFromCompose(fileContents: string) {
 function runCommand(
   command: string,
   cwd: string | undefined,
-  onLine: (line: string) => void
+  onLine: (line: string) => void,
 ) {
   return new Promise<string[]>((resolve, reject) => {
     const child = spawn("sh", ["-lc", command], {
@@ -259,8 +309,8 @@ function runCommand(
         new Error(
           summary
             ? `Command failed (${code}): ${command}\n${summary}`
-            : `Command failed (${code}): ${command}`
-        )
+            : `Command failed (${code}): ${command}`,
+        ),
       );
     });
   });
@@ -305,7 +355,7 @@ async function waitForHttpReady(port: number, timeoutMs = 60000) {
 async function waitForHttpReadyOrExit(
   port: number,
   containerTarget: string,
-  timeoutMs = 60000
+  timeoutMs = 60000,
 ) {
   const startedAt = Date.now();
 
@@ -339,7 +389,7 @@ async function isContainerRunning(containerTarget: string) {
     undefined,
     () => {
       // suppress inspect output in terminal stream
-    }
+    },
   );
 
   return lines.some((line) => line.trim() === "true");
@@ -348,18 +398,18 @@ async function isContainerRunning(containerTarget: string) {
 async function resolveContainerHostPort(
   containerName: string,
   containerPort: number,
-  onLine: (line: string) => void
+  onLine: (line: string) => void,
 ) {
   const portLines = await runCommand(
     `docker port ${escapeShellArg(containerName)} ${containerPort}/tcp`,
     undefined,
-    onLine
+    onLine,
   );
   const joined = portLines.join(" ");
   const match = joined.match(/:(\d{2,5})\b/);
   if (!match) {
     throw new Error(
-      `Could not resolve mapped host port for ${containerName} (${containerPort}/tcp)`
+      `Could not resolve mapped host port for ${containerName} (${containerPort}/tcp)`,
     );
   }
 
@@ -370,19 +420,29 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const repoUrlParam = requestUrl.searchParams.get("repoUrl");
   const repoUrlRaw =
-    repoUrlParam && /^https:\/\/github\.com\/[^/]+\/[^/]+(?:\.git)?\/?$/.test(repoUrlParam)
+    repoUrlParam &&
+    /^https:\/\/github\.com\/[^/]+\/[^/]+(?:\.git)?\/?$/.test(repoUrlParam)
       ? repoUrlParam.replace(/\/$/, "")
       : "https://github.com/richardwaters9049/DockerScripts.git";
 
-  const repoUrl = repoUrlRaw.endsWith(".git") ? repoUrlRaw : `${repoUrlRaw}.git`;
-  const repoNameFromUrl = repoUrl.split("/").pop()?.replace(/\.git$/i, "") || "DockerScripts";
-  const safeRepoName = repoNameFromUrl.replace(/[^a-zA-Z0-9._-]/g, "") || "DockerScripts";
+  const repoUrl = repoUrlRaw.endsWith(".git")
+    ? repoUrlRaw
+    : `${repoUrlRaw}.git`;
+  const repoNameFromUrl =
+    repoUrl
+      .split("/")
+      .pop()
+      ?.replace(/\.git$/i, "") || "DockerScripts";
+  const safeRepoName =
+    repoNameFromUrl.replace(/[^a-zA-Z0-9._-]/g, "") || "DockerScripts";
   const sessionId = randomUUID();
   const sessionKey = sessionId.replace(/-/g, "").slice(0, 12);
 
   const demoRoot = "/tmp/docker-demo-workspace";
   const repoDir = path.join(demoRoot, `${safeRepoName}-${sessionKey}`);
-  const imageNameBase = safeRepoName.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
+  const imageNameBase = safeRepoName
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, "-");
   const imageName = `${imageNameBase}:${sessionKey}`;
   const containerName = `${imageNameBase}-demo-${sessionKey}`;
 
@@ -392,17 +452,21 @@ export async function GET(request: Request) {
         controller.enqueue(
           eventChunk("command", {
             line: `# ${safeRepoName}`,
-          })
+          }),
         );
         controller.enqueue(
           eventChunk("command", {
             line: "$ mkdir -p /tmp/docker-demo-workspace",
-          })
+          }),
         );
 
-        await runCommand("mkdir -p /tmp/docker-demo-workspace", undefined, (line) => {
-          controller.enqueue(eventChunk("log", { line }));
-        });
+        await runCommand(
+          "mkdir -p /tmp/docker-demo-workspace",
+          undefined,
+          (line) => {
+            controller.enqueue(eventChunk("log", { line }));
+          },
+        );
 
         const setupCommands = [
           {
@@ -428,7 +492,9 @@ export async function GET(request: Request) {
         }
 
         let dockerfilePath = await findDockerfile(repoDir);
-        const composeFilePath = dockerfilePath ? null : await findComposeFile(repoDir);
+        const composeFilePath = dockerfilePath
+          ? null
+          : await findComposeFile(repoDir);
         let generatedDockerPort: number | null = null;
 
         if (!dockerfilePath && !composeFilePath) {
@@ -438,7 +504,7 @@ export async function GET(request: Request) {
           controller.enqueue(
             eventChunk("log", {
               line: `> Auto-generated Dockerfile at ${generated.dockerfilePath} (${generated.source})`,
-            })
+            }),
           );
         }
 
@@ -461,7 +527,7 @@ export async function GET(request: Request) {
           runCommands.push({
             line: buildLine,
             command: `docker build -t ${escapeShellArg(imageName)} -f ${escapeShellArg(
-              dockerfilePath
+              dockerfilePath,
             )} ${escapeShellArg(buildContext)}`,
           });
           runCommands.push({
@@ -502,17 +568,22 @@ export async function GET(request: Request) {
 
           controller.enqueue(eventChunk("command", { line: preferredRunLine }));
           try {
-            const runLines = await runCommand(preferredRunCommand, undefined, (line) => {
-              controller.enqueue(eventChunk("log", { line }));
-            });
+            const runLines = await runCommand(
+              preferredRunCommand,
+              undefined,
+              (line) => {
+                controller.enqueue(eventChunk("log", { line }));
+              },
+            );
             launchedContainerId = extractContainerId(runLines);
             controller.enqueue(
               eventChunk("log", {
                 line: `> Host port ${DEFAULT_APP_PORT} is available and was used.`,
-              })
+              }),
             );
           } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
+            const message =
+              error instanceof Error ? error.message : String(error);
             const isPortConflict =
               message.includes("address already in use") ||
               message.includes("port is already allocated");
@@ -523,9 +594,8 @@ export async function GET(request: Request) {
 
             controller.enqueue(
               eventChunk("log", {
-                line:
-                  `> Host port ${DEFAULT_APP_PORT} is busy; retrying with an auto-assigned port.`,
-              })
+                line: `> Host port ${DEFAULT_APP_PORT} is busy; retrying with an auto-assigned port.`,
+              }),
             );
 
             await runCommand(
@@ -533,15 +603,19 @@ export async function GET(request: Request) {
               undefined,
               (line) => {
                 controller.enqueue(eventChunk("log", { line }));
-              }
+              },
             );
 
             const autoRunLine = `$ docker run -it -p <auto>:${previewContainerPort} ${imageName}`;
             const autoRunCommand = `docker run -d --name ${escapeShellArg(containerName)} ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort}${legacyPortArg} ${escapeShellArg(imageName)}`;
             controller.enqueue(eventChunk("command", { line: autoRunLine }));
-            const autoRunLines = await runCommand(autoRunCommand, undefined, (line) => {
-              controller.enqueue(eventChunk("log", { line }));
-            });
+            const autoRunLines = await runCommand(
+              autoRunCommand,
+              undefined,
+              (line) => {
+                controller.enqueue(eventChunk("log", { line }));
+              },
+            );
             launchedContainerId = extractContainerId(autoRunLines);
 
             previewHostPort = await resolveContainerHostPort(
@@ -549,19 +623,23 @@ export async function GET(request: Request) {
               previewContainerPort,
               (line) => {
                 controller.enqueue(eventChunk("log", { line }));
-              }
+              },
             );
             controller.enqueue(
               eventChunk("log", {
                 line: `> Using auto-assigned host port ${previewHostPort}`,
-              })
+              }),
             );
           }
         }
 
         const initialContainerTarget = launchedContainerId ?? containerName;
         let { ready, exitedEarly } = dockerfilePath
-          ? await waitForHttpReadyOrExit(previewHostPort, initialContainerTarget, 12000)
+          ? await waitForHttpReadyOrExit(
+              previewHostPort,
+              initialContainerTarget,
+              12000,
+            )
           : {
               ready: await waitForHttpReady(previewHostPort, 45000),
               exitedEarly: false,
@@ -572,14 +650,14 @@ export async function GET(request: Request) {
               line: exitedEarly
                 ? `! Container exited before app became ready on localhost:${previewHostPort}`
                 : `! HTTP did not become ready on localhost:${previewHostPort} within timeout`,
-            })
+            }),
           );
           const logsTarget = launchedContainerId ?? containerName;
           if (launchedContainerId) {
             controller.enqueue(
               eventChunk("log", {
                 line: `> Inspecting container logs for ${launchedContainerId}`,
-              })
+              }),
             );
           }
           const logLines = await runCommand(
@@ -587,20 +665,19 @@ export async function GET(request: Request) {
             undefined,
             (line) => {
               controller.enqueue(eventChunk("log", { line }));
-            }
+            },
           );
 
           const usageNeedsProjectArg = logLines.some((line) =>
-            /docker-nextpy\s+<project-name>/i.test(line)
+            /docker-nextpy\s+<project-name>/i.test(line),
           );
 
           if (usageNeedsProjectArg && dockerfilePath) {
             const defaultProjectName = "demo-project";
             controller.enqueue(
               eventChunk("log", {
-                line:
-                  "> Detected docker-nextpy CLI entrypoint; retrying with a default project name.",
-              })
+                line: "> Detected docker-nextpy CLI entrypoint; retrying with a default project name.",
+              }),
             );
 
             await runCommand(
@@ -608,7 +685,7 @@ export async function GET(request: Request) {
               undefined,
               (line) => {
                 controller.enqueue(eventChunk("log", { line }));
-              }
+              },
             );
 
             const retryLegacyPortArg =
@@ -621,8 +698,16 @@ export async function GET(request: Request) {
               `export PATH="$PATH:/root/.bun/bin:/home/root/.bun/bin"`,
               `if ! command -v bun >/dev/null 2>&1; then if [ -x /root/.bun/bin/bun ]; then ln -sf /root/.bun/bin/bun /usr/local/bin/bun || true; fi; fi`,
               `if ! command -v bun >/dev/null 2>&1; then curl -fsSL https://bun.sh/install | bash || true; export PATH="$PATH:/root/.bun/bin:/home/root/.bun/bin"; fi`,
-              `PROJECT_NAME=${escapeShellArg(defaultProjectName)}`,
-              `if command -v docker_pyNext_v3 >/dev/null 2>&1; then docker_pyNext_v3 "$PROJECT_NAME" || true; else /usr/local/bin/docker_pyNext_v3 "$PROJECT_NAME" || true; fi`,
+              `PROJECT_NAME=${defaultProjectName}`,
+              `# Run docker_pyNext_v3 to create project structure, but skip docker-compose part`,
+              `if command -v docker_pyNext_v3 >/dev/null 2>&1; then 
+                docker_pyNext_v3 "$PROJECT_NAME" || true;
+                # Remove docker-compose.yml since we can't run docker inside docker
+                if [ -f "/workspace/$PROJECT_NAME/docker-compose.yml" ]; then 
+                  rm -f "/workspace/$PROJECT_NAME/docker-compose.yml";
+                  echo "Removed docker-compose.yml (not supported in container)";
+                fi;
+              else /usr/local/bin/docker_pyNext_v3 "$PROJECT_NAME" || true; fi`,
               `TARGET_DIR=""`,
               `if [ -d "/workspace/$PROJECT_NAME" ]; then TARGET_DIR="/workspace/$PROJECT_NAME"; fi`,
               `if [ -z "$TARGET_DIR" ]; then TARGET_DIR="$(find /workspace -maxdepth 5 -type d -name "$PROJECT_NAME" | head -n 1)"; fi`,
@@ -630,14 +715,20 @@ export async function GET(request: Request) {
               `if [ -z "$TARGET_DIR" ]; then TARGET_DIR="/workspace"; fi`,
               `cd "$TARGET_DIR"`,
               `echo "Starting app from: $TARGET_DIR"`,
+              `# Check for frontend directory first (docker_pyNext_v3 creates this structure)`,
+              `if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then cd frontend && echo "Found frontend directory, switching to frontend"; fi`,
               `if command -v bun >/dev/null 2>&1 && [ -f package.json ]; then bun install || true; bun run dev --host 0.0.0.0 --port ${previewContainerPort} || bun run start -- --host 0.0.0.0 --port ${previewContainerPort} || bunx --yes serve . --listen ${previewContainerPort}; elif [ -f package.json ]; then npm install || true; npm run dev -- --hostname 0.0.0.0 --port ${previewContainerPort} || npm run start -- --hostname 0.0.0.0 --port ${previewContainerPort} || npx --yes serve . -l ${previewContainerPort}; elif command -v python3 >/dev/null 2>&1; then python3 -m http.server ${previewContainerPort} --bind 0.0.0.0; elif command -v python >/dev/null 2>&1; then python -m http.server ${previewContainerPort} --bind 0.0.0.0; else sh -c 'echo \"No runtime found to serve files\"; tail -f /dev/null'; fi`,
             ].join("; ");
             const retryRunCommand = `docker run -d --name ${escapeShellArg(containerName)} -e CI=1 -e NEXT_TELEMETRY_DISABLED=1 ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort}${retryLegacyPortArg} --entrypoint sh ${escapeShellArg(imageName)} -lc ${escapeShellArg(bootstrapCommand)}`;
             controller.enqueue(eventChunk("command", { line: retryRunLine }));
 
-            const retryRunLines = await runCommand(retryRunCommand, undefined, (line) => {
-              controller.enqueue(eventChunk("log", { line }));
-            });
+            const retryRunLines = await runCommand(
+              retryRunCommand,
+              undefined,
+              (line) => {
+                controller.enqueue(eventChunk("log", { line }));
+              },
+            );
 
             launchedContainerId = extractContainerId(retryRunLines);
             previewHostPort = await resolveContainerHostPort(
@@ -645,37 +736,37 @@ export async function GET(request: Request) {
               previewContainerPort,
               (line) => {
                 controller.enqueue(eventChunk("log", { line }));
-              }
+              },
             );
             controller.enqueue(
               eventChunk("log", {
                 line: `> Using auto-assigned host port ${previewHostPort}`,
-              })
+              }),
             );
 
             controller.enqueue(
               eventChunk("log", {
                 line: `> Waiting for app readiness on localhost:${previewHostPort} (up to 75s)...`,
-              })
+              }),
             );
 
             ({ ready, exitedEarly } = await waitForHttpReadyOrExit(
               previewHostPort,
               launchedContainerId ?? containerName,
-              75000
+              75000,
             ));
             if (!ready && exitedEarly) {
               controller.enqueue(
                 eventChunk("log", {
                   line: `! Container ${containerName} exited before becoming ready`,
-                })
+                }),
               );
             }
             if (!ready) {
               controller.enqueue(
                 eventChunk("log", {
                   line: `! Retry still did not become ready on localhost:${previewHostPort} within timeout`,
-                })
+                }),
               );
               const retryLogsTarget = launchedContainerId ?? containerName;
               await runCommand(
@@ -683,7 +774,7 @@ export async function GET(request: Request) {
                 undefined,
                 (line) => {
                   controller.enqueue(eventChunk("log", { line }));
-                }
+                },
               );
             }
           }
@@ -695,12 +786,12 @@ export async function GET(request: Request) {
                 LEGACY_APP_PORT,
                 (line) => {
                   controller.enqueue(eventChunk("log", { line }));
-                }
+                },
               );
               controller.enqueue(
                 eventChunk("log", {
                   line: `> Trying legacy internal port ${LEGACY_APP_PORT} on host ${legacyHostPort}`,
-                })
+                }),
               );
 
               const legacyReady = await waitForHttpReady(legacyHostPort, 45000);
@@ -711,7 +802,7 @@ export async function GET(request: Request) {
                 controller.enqueue(
                   eventChunk("log", {
                     line: `> App responded on legacy port mapping localhost:${legacyHostPort}`,
-                  })
+                  }),
                 );
               }
             } catch {
@@ -721,7 +812,7 @@ export async function GET(request: Request) {
 
           if (!ready) {
             throw new Error(
-              `Container started but did not serve HTTP on localhost:${previewHostPort} within 45 seconds`
+              `Container started but did not serve HTTP on localhost:${previewHostPort} within 45 seconds`,
             );
           }
         }
@@ -738,27 +829,27 @@ export async function GET(request: Request) {
         });
 
         controller.enqueue(
-          eventChunk("log", { line: "> Booting containers..." })
+          eventChunk("log", { line: "> Booting containers..." }),
         );
         controller.enqueue(
-          eventChunk("log", { line: "> Installing dependencies..." })
+          eventChunk("log", { line: "> Installing dependencies..." }),
         );
         controller.enqueue(
           eventChunk("log", {
             line: `> Mapped container port ${previewContainerPort} to host port ${previewHostPort} for in-window preview`,
-          })
+          }),
         );
         controller.enqueue(
           eventChunk("log", {
             line: `> Starting app preview at ${proxyUrl}`,
-          })
+          }),
         );
         controller.enqueue(
           eventChunk("ready", {
             sessionId,
             url: proxyUrl,
             containerName,
-          })
+          }),
         );
         controller.enqueue(eventChunk("done", { ok: true }));
       } catch (error) {
@@ -771,20 +862,19 @@ export async function GET(request: Request) {
           controller.enqueue(
             eventChunk("log", {
               line: "! GitHub returned 'Repository not found'.",
-            })
+            }),
           );
           controller.enqueue(
             eventChunk("log", {
-              line:
-                "! Check repo URL spelling, or make the repo public for this demo endpoint.",
-            })
+              line: "! Check repo URL spelling, or make the repo public for this demo endpoint.",
+            }),
           );
         }
 
         controller.enqueue(
           eventChunk("fatal", {
             line: message,
-          })
+          }),
         );
       } finally {
         controller.close();
