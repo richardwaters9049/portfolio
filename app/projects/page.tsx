@@ -63,6 +63,7 @@ export default function Projects() {
     const subtitleRef = useRef<HTMLParagraphElement>(null);
     const cardsRef = useRef<Array<HTMLDivElement | null>>([]);
     const [isDockerDemoOpen, setIsDockerDemoOpen] = useState(false);
+    const dockerProject = projects.find((project) => project.demoMode === "terminal");
 
     useEffect(() => {
         if (!sectionRef.current) return;
@@ -212,6 +213,7 @@ export default function Projects() {
             <DockerDemoWindow
                 isOpen={isDockerDemoOpen}
                 onClose={() => setIsDockerDemoOpen(false)}
+                repoUrl={dockerProject?.github ?? "https://github.com/richywaters/docker-pynext-scriptatest.git"}
             />
         </section>
     );

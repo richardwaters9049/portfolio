@@ -6,6 +6,7 @@ import Link from "next/link";
 type DockerDemoWindowProps = {
   isOpen: boolean;
   onClose: () => void;
+  repoUrl: string;
 };
 
 const scriptPreview = [
@@ -24,6 +25,7 @@ const scriptPreview = [
 export default function DockerDemoWindow({
   isOpen,
   onClose,
+  repoUrl,
 }: DockerDemoWindowProps) {
   const [renderedLines, setRenderedLines] = useState<string[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -61,7 +63,9 @@ export default function DockerDemoWindow({
     setIsRunning(true);
     runCompletedRef.current = false;
 
-    const source = new EventSource("/api/docker-demo/stream");
+    const source = new EventSource(
+      `/api/docker-demo/stream?repoUrl=${encodeURIComponent(repoUrl)}`
+    );
     eventSourceRef.current = source;
 
     const parsePayload = (event: MessageEvent) => {
@@ -120,7 +124,7 @@ export default function DockerDemoWindow({
       source.close();
       eventSourceRef.current = null;
     };
-  }, [appendLine]);
+  }, [appendLine, repoUrl]);
 
   useEffect(() => {
     if (!terminalRef.current) return;

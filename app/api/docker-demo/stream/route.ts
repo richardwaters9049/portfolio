@@ -54,7 +54,14 @@ function runCommand(
   });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const requestUrl = new URL(request.url);
+  const repoUrlParam = requestUrl.searchParams.get("repoUrl");
+  const repoUrl =
+    repoUrlParam && /^https:\/\/github\.com\/[^/]+\/[^/]+(?:\.git)?\/?$/.test(repoUrlParam)
+      ? repoUrlParam.replace(/\/$/, "")
+      : "https://github.com/richywaters/docker-pynext-scriptatest.git";
+
   const demoRoot = "/tmp/docker-demo-workspace";
   const repoDir = path.join(demoRoot, "docker-pynext-scriptatest");
   const imageName = "pynext-scriptatest";
@@ -85,9 +92,8 @@ export async function GET() {
             command: `rm -rf ${repoDir}`,
           },
           {
-            line: "$ git clone https://github.com/richywaters/docker-pynext-scriptatest.git",
-            command:
-              "git clone https://github.com/richywaters/docker-pynext-scriptatest.git /tmp/docker-demo-workspace/docker-pynext-scriptatest",
+            line: `$ git clone ${repoUrl}`,
+            command: `git clone ${repoUrl} /tmp/docker-demo-workspace/docker-pynext-scriptatest`,
           },
           {
             line: "$ cd docker-pynext-scriptatest",
@@ -139,12 +145,28 @@ export async function GET() {
         );
         controller.enqueue(eventChunk("done", { ok: true }));
       } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Unknown error while running Docker demo";
+
+        if (message.includes("Repository not found")) {
+          controller.enqueue(
+            eventChunk("log", {
+              line: "! GitHub returned 'Repository not found'.",
+            })
+          );
+          controller.enqueue(
+            eventChunk("log", {
+              line:
+                "! Check repo URL spelling, or make the repo public for this demo endpoint.",
+            })
+          );
+        }
+
         controller.enqueue(
           eventChunk("fatal", {
-            line:
-              error instanceof Error
-                ? error.message
-                : "Unknown error while running Docker demo",
+            line: message,
           })
         );
       } finally {
