@@ -7,6 +7,7 @@ import { setDockerDemoSession } from "@/lib/docker-demo-store";
 export const runtime = "nodejs";
 
 const encoder = new TextEncoder();
+const DEFAULT_APP_PORT = 8080;
 
 type StreamPayload = Record<string, string | number | boolean | null>;
 
@@ -112,7 +113,7 @@ async function findFileByName(
 }
 
 function inferPortFromScript(scriptValue?: string) {
-  if (!scriptValue) return 3000;
+  if (!scriptValue) return DEFAULT_APP_PORT;
 
   const withDoubleDash = scriptValue.match(/(?:--port|-p)(?:=|\s+)(\d{2,5})/);
   if (withDoubleDash) return Number(withDoubleDash[1]);
@@ -120,7 +121,7 @@ function inferPortFromScript(scriptValue?: string) {
   const envStyle = scriptValue.match(/\bPORT=(\d{2,5})\b/);
   if (envStyle) return Number(envStyle[1]);
 
-  return 3000;
+  return DEFAULT_APP_PORT;
 }
 
 function jsonCommand(command: string) {
@@ -174,8 +175,8 @@ CMD ${jsonCommand(runCommand)}
       ? "python app.py"
       : mainPyPath
         ? "python main.py"
-        : "python -m http.server 3000";
-    const previewPort = 3000;
+        : `python -m http.server ${DEFAULT_APP_PORT}`;
+    const previewPort = DEFAULT_APP_PORT;
     const dockerfilePath = path.join(appDir, "Dockerfile");
     const dockerfileContent = `FROM python:3.11-slim
 WORKDIR /app
@@ -190,7 +191,7 @@ CMD ${jsonCommand(runner)}
     return { dockerfilePath, previewPort, source: "generated-python" };
   }
 
-  const previewPort = 3000;
+  const previewPort = DEFAULT_APP_PORT;
   const dockerfilePath = path.join(repoDir, "Dockerfile");
   const dockerfileContent = `FROM python:3.11-slim
 WORKDIR /app
@@ -204,9 +205,11 @@ CMD ${jsonCommand(`python -m http.server ${previewPort} --bind 0.0.0.0`)}
 }
 
 function inferPortFromCompose(fileContents: string) {
-  const explicit3000Match = fileContents.match(/["']?(\d{2,5}):3000["']?/);
-  if (explicit3000Match) {
-    return Number(explicit3000Match[1]);
+  const explicitDefaultPortMatch = fileContents.match(
+    new RegExp(`["']?(\\d{2,5}):${DEFAULT_APP_PORT}["']?`)
+  );
+  if (explicitDefaultPortMatch) {
+    return Number(explicitDefaultPortMatch[1]);
   }
 
   const firstPortMatch = fileContents.match(/["']?(\d{2,5}):(\d{2,5})["']?/);
@@ -214,7 +217,7 @@ function inferPortFromCompose(fileContents: string) {
     return Number(firstPortMatch[1]);
   }
 
-  return 3000;
+  return DEFAULT_APP_PORT;
 }
 
 function runCommand(
@@ -395,8 +398,8 @@ export async function GET(request: Request) {
           );
         }
 
-        let previewHostPort = 3000;
-        let previewContainerPort = 3000;
+        let previewHostPort = DEFAULT_APP_PORT;
+        let previewContainerPort = DEFAULT_APP_PORT;
         let launchedContainerId: string | null = null;
         let activeComposePath: string | null = null;
         const workspaceMountArg = `-v ${escapeShellArg(repoDir)}:/workspace`;
@@ -404,8 +407,8 @@ export async function GET(request: Request) {
 
         if (dockerfilePath) {
           const buildContext = path.dirname(dockerfilePath);
-          previewContainerPort = generatedDockerPort ?? 3000;
-          previewHostPort = 3000;
+          previewContainerPort = generatedDockerPort ?? DEFAULT_APP_PORT;
+          previewHostPort = DEFAULT_APP_PORT;
           const buildLine =
             buildContext === repoDir
               ? `$ docker build -t ${imageName} .`
@@ -424,7 +427,7 @@ export async function GET(request: Request) {
         } else if (composeFilePath) {
           const composeContents = await readFile(composeFilePath, "utf8");
           previewHostPort = inferPortFromCompose(composeContents);
-          previewContainerPort = 3000;
+          previewContainerPort = DEFAULT_APP_PORT;
           activeComposePath = composeFilePath;
 
           runCommands.push({
@@ -457,7 +460,7 @@ export async function GET(request: Request) {
             launchedContainerId = extractContainerId(runLines);
             controller.enqueue(
               eventChunk("log", {
-                line: "> Host port 3000 is available and was used.",
+                line: `> Host port ${DEFAULT_APP_PORT} is available and was used.`,
               })
             );
           } catch (error) {
@@ -473,7 +476,7 @@ export async function GET(request: Request) {
             controller.enqueue(
               eventChunk("log", {
                 line:
-                  "> Host port 3000 is busy; retrying with an auto-assigned port.",
+                  `> Host port ${DEFAULT_APP_PORT} is busy; retrying with an auto-assigned port.`,
               })
             );
 

@@ -40,7 +40,7 @@ export default function DockerDemoWindow({
     `$ git clone ${repoUrl}`,
     `$ cd ${repoName}`,
     `$ docker build -t ${imageName} .`,
-    `$ docker run --rm -it -p <HOST_PORT>:3000 ${imageName}`,
+    `$ docker run --rm -it -p <HOST_PORT>:8080 ${imageName}`,
     "",
     "> Booting containers...",
     "> Installing dependencies...",
