@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export const runtime = "nodejs";
@@ -73,6 +73,113 @@ async function findComposeFile(repoDir: string, depth = 0): Promise<string | nul
     const nestedPath = path.join(repoDir, entry.name);
     const nestedCompose = await findComposeFile(nestedPath, depth + 1);
     if (nestedCompose) return nestedCompose;
+  }
+
+  return null;
+}
+
+async function findFileByName(
+  repoDir: string,
+  filename: string,
+  depth = 0
+): Promise<string | null> {
+  if (depth > 5) return null;
+
+  const entries = await readdir(repoDir, { withFileTypes: true });
+  const file = entries.find((entry) => entry.isFile() && entry.name === filename);
+  if (file) {
+    return path.join(repoDir, file.name);
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (SKIP_DIRS.has(entry.name)) continue;
+
+    const nestedPath = path.join(repoDir, entry.name);
+    const nestedFile = await findFileByName(nestedPath, filename, depth + 1);
+    if (nestedFile) return nestedFile;
+  }
+
+  return null;
+}
+
+function inferPortFromScript(scriptValue?: string) {
+  if (!scriptValue) return 3000;
+
+  const withDoubleDash = scriptValue.match(/(?:--port|-p)(?:=|\s+)(\d{2,5})/);
+  if (withDoubleDash) return Number(withDoubleDash[1]);
+
+  const envStyle = scriptValue.match(/\bPORT=(\d{2,5})\b/);
+  if (envStyle) return Number(envStyle[1]);
+
+  return 3000;
+}
+
+function jsonCommand(command: string) {
+  return JSON.stringify(["sh", "-c", command]);
+}
+
+async function createDockerfileIfMissing(repoDir: string): Promise<{
+  dockerfilePath: string;
+  previewPort: number;
+  source: "generated-node" | "generated-python";
+} | null> {
+  const packageJsonPath = await findFileByName(repoDir, "package.json");
+  if (packageJsonPath) {
+    const appDir = path.dirname(packageJsonPath);
+    const packageJsonRaw = await readFile(packageJsonPath, "utf8");
+    const packageJson = JSON.parse(packageJsonRaw) as {
+      scripts?: Record<string, string>;
+    };
+
+    const startScript = packageJson.scripts?.start;
+    const devScript = packageJson.scripts?.dev;
+    const buildScript = packageJson.scripts?.build;
+    const previewPort = inferPortFromScript(startScript ?? devScript);
+    const runCommand = startScript
+      ? `npm run start -- --hostname 0.0.0.0 --port ${previewPort}`
+      : devScript
+        ? `npm run dev -- --hostname 0.0.0.0 --port ${previewPort}`
+        : `node server.js`;
+
+    const dockerfilePath = path.join(appDir, "Dockerfile");
+    const dockerfileContent = `FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+${buildScript ? "RUN npm run build\n" : ""}EXPOSE ${previewPort}
+CMD ${jsonCommand(runCommand)}
+`;
+
+    await writeFile(dockerfilePath, dockerfileContent, "utf8");
+    return { dockerfilePath, previewPort, source: "generated-node" };
+  }
+
+  const requirementsPath = await findFileByName(repoDir, "requirements.txt");
+  if (requirementsPath) {
+    const appDir = path.dirname(requirementsPath);
+    const appPyPath = await findFileByName(appDir, "app.py");
+    const mainPyPath = await findFileByName(appDir, "main.py");
+
+    const runner = appPyPath
+      ? "python app.py"
+      : mainPyPath
+        ? "python main.py"
+        : "python -m http.server 3000";
+    const previewPort = 3000;
+    const dockerfilePath = path.join(appDir, "Dockerfile");
+    const dockerfileContent = `FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE ${previewPort}
+CMD ${jsonCommand(runner)}
+`;
+
+    await writeFile(dockerfilePath, dockerfileContent, "utf8");
+    return { dockerfilePath, previewPort, source: "generated-python" };
   }
 
   return null;
@@ -186,11 +293,26 @@ export async function GET(request: Request) {
           });
         }
 
-        const dockerfilePath = await findDockerfile(repoDir);
+        let dockerfilePath = await findDockerfile(repoDir);
         const composeFilePath = dockerfilePath ? null : await findComposeFile(repoDir);
+        let generatedDockerPort: number | null = null;
+
+        if (!dockerfilePath && !composeFilePath) {
+          const generated = await createDockerfileIfMissing(repoDir);
+          if (generated) {
+            dockerfilePath = generated.dockerfilePath;
+            generatedDockerPort = generated.previewPort;
+            controller.enqueue(
+              eventChunk("log", {
+                line: `> Auto-generated Dockerfile at ${generated.dockerfilePath} (${generated.source})`,
+              })
+            );
+          }
+        }
+
         if (!dockerfilePath && !composeFilePath) {
           throw new Error(
-            `No Dockerfile or docker compose file found in ${repoDir}. Add one to this repository.`
+            `No Dockerfile or docker compose file found in ${repoDir}, and no supported project type was detected for auto-generation.`
           );
         }
 
@@ -215,8 +337,8 @@ export async function GET(request: Request) {
             command: `docker rm -f ${escapeShellArg(containerName)} || true`,
           });
           runCommands.push({
-            line: `$ docker run --rm -it -p 3000:3000 ${imageName}`,
-            command: `docker run --rm -d --name ${escapeShellArg(containerName)} -p ${previewHostPort}:3000 ${escapeShellArg(imageName)}`,
+            line: `$ docker run --rm -it -p ${previewHostPort}:${generatedDockerPort ?? 3000} ${imageName}`,
+            command: `docker run --rm -d --name ${escapeShellArg(containerName)} -p ${previewHostPort}:${generatedDockerPort ?? 3000} ${escapeShellArg(imageName)}`,
           });
         } else if (composeFilePath) {
           const composeContents = await readFile(composeFilePath, "utf8");
