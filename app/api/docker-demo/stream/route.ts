@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 export const runtime = "nodejs";
@@ -25,6 +25,12 @@ function splitOutput(output: string) {
 }
 
 const SKIP_DIRS = new Set([".git", "node_modules", ".next", "dist", "build"]);
+const COMPOSE_FILE_NAMES = [
+  "docker-compose.yml",
+  "docker-compose.yaml",
+  "compose.yml",
+  "compose.yaml",
+];
 
 async function findDockerfile(repoDir: string, depth = 0): Promise<string | null> {
   if (depth > 5) return null;
@@ -47,6 +53,43 @@ async function findDockerfile(repoDir: string, depth = 0): Promise<string | null
   }
 
   return null;
+}
+
+async function findComposeFile(repoDir: string, depth = 0): Promise<string | null> {
+  if (depth > 5) return null;
+
+  const entries = await readdir(repoDir, { withFileTypes: true });
+  for (const filename of COMPOSE_FILE_NAMES) {
+    const composeFile = entries.find((entry) => entry.isFile() && entry.name === filename);
+    if (composeFile) {
+      return path.join(repoDir, composeFile.name);
+    }
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (SKIP_DIRS.has(entry.name)) continue;
+
+    const nestedPath = path.join(repoDir, entry.name);
+    const nestedCompose = await findComposeFile(nestedPath, depth + 1);
+    if (nestedCompose) return nestedCompose;
+  }
+
+  return null;
+}
+
+function inferPortFromCompose(fileContents: string) {
+  const explicit3000Match = fileContents.match(/["']?(\d{2,5}):3000["']?/);
+  if (explicit3000Match) {
+    return Number(explicit3000Match[1]);
+  }
+
+  const firstPortMatch = fileContents.match(/["']?(\d{2,5}):(\d{2,5})["']?/);
+  if (firstPortMatch) {
+    return Number(firstPortMatch[1]);
+  }
+
+  return 3000;
 }
 
 function runCommand(
@@ -144,34 +187,50 @@ export async function GET(request: Request) {
         }
 
         const dockerfilePath = await findDockerfile(repoDir);
-        if (!dockerfilePath) {
+        const composeFilePath = dockerfilePath ? null : await findComposeFile(repoDir);
+        if (!dockerfilePath && !composeFilePath) {
           throw new Error(
-            `No Dockerfile found in ${repoDir}. Add a Dockerfile or move one into this repository.`
+            `No Dockerfile or docker compose file found in ${repoDir}. Add one to this repository.`
           );
         }
 
-        const buildContext = path.dirname(dockerfilePath);
-        const buildLine =
-          buildContext === repoDir
-            ? `$ docker build -t ${imageName} .`
-            : `$ docker build -t ${imageName} -f ${dockerfilePath} ${buildContext}`;
+        let previewHostPort = hostPort;
+        const runCommands: Array<{ line: string; command: string }> = [];
 
-        const runCommands = [
-          {
+        if (dockerfilePath) {
+          const buildContext = path.dirname(dockerfilePath);
+          const buildLine =
+            buildContext === repoDir
+              ? `$ docker build -t ${imageName} .`
+              : `$ docker build -t ${imageName} -f ${dockerfilePath} ${buildContext}`;
+
+          runCommands.push({
             line: buildLine,
             command: `docker build -t ${escapeShellArg(imageName)} -f ${escapeShellArg(
               dockerfilePath
             )} ${escapeShellArg(buildContext)}`,
-          },
-          {
+          });
+          runCommands.push({
             line: `$ docker rm -f ${containerName} || true`,
             command: `docker rm -f ${escapeShellArg(containerName)} || true`,
-          },
-          {
+          });
+          runCommands.push({
             line: `$ docker run --rm -it -p 3000:3000 ${imageName}`,
-            command: `docker run --rm -d --name ${escapeShellArg(containerName)} -p ${hostPort}:3000 ${escapeShellArg(imageName)}`,
-          },
-        ];
+            command: `docker run --rm -d --name ${escapeShellArg(containerName)} -p ${previewHostPort}:3000 ${escapeShellArg(imageName)}`,
+          });
+        } else if (composeFilePath) {
+          const composeContents = await readFile(composeFilePath, "utf8");
+          previewHostPort = inferPortFromCompose(composeContents);
+
+          runCommands.push({
+            line: `$ docker compose -f ${composeFilePath} down --remove-orphans || true`,
+            command: `docker compose -f ${escapeShellArg(composeFilePath)} down --remove-orphans || true`,
+          });
+          runCommands.push({
+            line: `$ docker compose -f ${composeFilePath} up --build -d`,
+            command: `docker compose -f ${escapeShellArg(composeFilePath)} up --build -d`,
+          });
+        }
 
         for (const step of runCommands) {
           controller.enqueue(eventChunk("command", { line: step.line }));
@@ -189,17 +248,17 @@ export async function GET(request: Request) {
         );
         controller.enqueue(
           eventChunk("log", {
-            line: `> Mapped container port 3000 to host port ${hostPort} for in-window preview`,
+            line: `> Mapped container port 3000 to host port ${previewHostPort} for in-window preview`,
           })
         );
         controller.enqueue(
           eventChunk("log", {
-            line: `> Starting Next.js app on http://localhost:${hostPort}`,
+            line: `> Starting Next.js app on http://localhost:${previewHostPort}`,
           })
         );
         controller.enqueue(
           eventChunk("ready", {
-            url: `http://localhost:${hostPort}`,
+            url: `http://localhost:${previewHostPort}`,
             containerName,
           })
         );
