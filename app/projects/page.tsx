@@ -1,13 +1,23 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
 import gsap from "gsap";
-import Demowindow from "@/components/ui/demo-window";
+import DockerDemoWindow from "@/components/ui/docker-demo-window";
 
-const projects = [
+type Project = {
+    id: string;
+    title: string;
+    description: string;
+    image: string;
+    github: string;
+    demo: string;
+    demoMode?: "external" | "terminal";
+};
+
+const projects: Project[] = [
     {
         id: "01",
         title: "Password Cracker",
@@ -35,6 +45,16 @@ const projects = [
         github: "https://github.com/yourname/security-toolkit",
         demo: "https://demo-link.com",
     },
+    {
+        id: "04",
+        title: "Docker Script",
+        description:
+            "Dockerized Python + Next.js script runner for repeatable local dev and testing workflows.",
+        image: "/images/GhostHack.png",
+        github: "https://github.com/richywaters/docker-pynext-scriptatest",
+        demo: "docker-script-terminal",
+        demoMode: "terminal",
+    },
 ];
 
 export default function Projects() {
@@ -42,6 +62,7 @@ export default function Projects() {
     const titleRef = useRef<HTMLHeadingElement>(null);
     const subtitleRef = useRef<HTMLParagraphElement>(null);
     const cardsRef = useRef<Array<HTMLDivElement | null>>([]);
+    const [isDockerDemoOpen, setIsDockerDemoOpen] = useState(false);
 
     useEffect(() => {
         if (!sectionRef.current) return;
@@ -117,11 +138,6 @@ export default function Projects() {
                     Projects
                 </h1>
 
-                {/* Demo Window Content */}
-
-                {/* <Demowindow /> */}
-
-
                 <p
                     ref={subtitleRef}
                     className="text-xl text-gray-700 leading-relaxed font-bitter tracking-wider text-center max-w-3xl"
@@ -160,13 +176,23 @@ export default function Projects() {
                                 >
                                     GitHub
                                 </Link>
-                                <Link
-                                    href={project.demo}
-                                    target="_blank"
-                                    className="underline underline-offset-4 hover:opacity-70 transition"
-                                >
-                                    Demo
-                                </Link>
+                                {project.demoMode === "terminal" ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsDockerDemoOpen(true)}
+                                        className="underline underline-offset-4 hover:opacity-70 transition"
+                                    >
+                                        Demo
+                                    </button>
+                                ) : (
+                                    <Link
+                                        href={project.demo}
+                                        target="_blank"
+                                        className="underline underline-offset-4 hover:opacity-70 transition"
+                                    >
+                                        Demo
+                                    </Link>
+                                )}
                             </div>
                         </div>
 
@@ -182,6 +208,11 @@ export default function Projects() {
                     </div>
                 ))}
             </div>
+
+            <DockerDemoWindow
+                isOpen={isDockerDemoOpen}
+                onClose={() => setIsDockerDemoOpen(false)}
+            />
         </section>
     );
 }
