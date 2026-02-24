@@ -8,6 +8,7 @@ export const runtime = "nodejs";
 
 const encoder = new TextEncoder();
 const DEFAULT_APP_PORT = 8080;
+const LEGACY_APP_PORT = 3000;
 
 type StreamPayload = Record<string, string | number | boolean | null>;
 
@@ -449,8 +450,12 @@ export async function GET(request: Request) {
         }
 
         if (dockerfilePath) {
+          const legacyPortArg =
+            previewContainerPort === LEGACY_APP_PORT
+              ? ""
+              : ` -p 127.0.0.1::${LEGACY_APP_PORT}`;
           const preferredRunLine = `$ docker run -it -p ${previewHostPort}:${previewContainerPort} ${imageName}`;
-          const preferredRunCommand = `docker run -d --name ${escapeShellArg(containerName)} ${workspaceMountArg} -p ${previewHostPort}:${previewContainerPort} ${escapeShellArg(imageName)}`;
+          const preferredRunCommand = `docker run -d --name ${escapeShellArg(containerName)} ${workspaceMountArg} -p ${previewHostPort}:${previewContainerPort}${legacyPortArg} ${escapeShellArg(imageName)}`;
 
           controller.enqueue(eventChunk("command", { line: preferredRunLine }));
           try {
@@ -489,7 +494,7 @@ export async function GET(request: Request) {
             );
 
             const autoRunLine = `$ docker run -it -p <auto>:${previewContainerPort} ${imageName}`;
-            const autoRunCommand = `docker run -d --name ${escapeShellArg(containerName)} ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort} ${escapeShellArg(imageName)}`;
+            const autoRunCommand = `docker run -d --name ${escapeShellArg(containerName)} ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort}${legacyPortArg} ${escapeShellArg(imageName)}`;
             controller.enqueue(eventChunk("command", { line: autoRunLine }));
             const autoRunLines = await runCommand(autoRunCommand, undefined, (line) => {
               controller.enqueue(eventChunk("log", { line }));
@@ -555,6 +560,10 @@ export async function GET(request: Request) {
               }
             );
 
+            const retryLegacyPortArg =
+              previewContainerPort === LEGACY_APP_PORT
+                ? ""
+                : ` -p 127.0.0.1::${LEGACY_APP_PORT}`;
             const retryRunLine = `$ docker run -it -p <auto>:${previewContainerPort} ${imageName} ${defaultProjectName} (scaffold+serve)`;
             const bootstrapCommand = [
               "set -e",
@@ -564,7 +573,7 @@ export async function GET(request: Request) {
               `cd /workspace/${defaultProjectName} 2>/dev/null || cd /workspace`,
               `if command -v bun >/dev/null 2>&1; then bun install || true; bun dev --host 0.0.0.0 --port ${previewContainerPort}; elif [ -f package.json ]; then npm install || true; npm run dev -- --hostname 0.0.0.0 --port ${previewContainerPort} || npm run start -- --hostname 0.0.0.0 --port ${previewContainerPort}; else python -m http.server ${previewContainerPort} --bind 0.0.0.0; fi`,
             ].join("; ");
-            const retryRunCommand = `docker run -d --name ${escapeShellArg(containerName)} ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort} --entrypoint sh ${escapeShellArg(imageName)} -lc ${escapeShellArg(bootstrapCommand)}`;
+            const retryRunCommand = `docker run -d --name ${escapeShellArg(containerName)} ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort}${retryLegacyPortArg} --entrypoint sh ${escapeShellArg(imageName)} -lc ${escapeShellArg(bootstrapCommand)}`;
             controller.enqueue(eventChunk("command", { line: retryRunLine }));
 
             const retryRunLines = await runCommand(retryRunCommand, undefined, (line) => {
@@ -600,6 +609,37 @@ export async function GET(request: Request) {
                   controller.enqueue(eventChunk("log", { line }));
                 }
               );
+            }
+          }
+
+          if (!ready && previewContainerPort !== LEGACY_APP_PORT) {
+            try {
+              const legacyHostPort = await resolveContainerHostPort(
+                containerName,
+                LEGACY_APP_PORT,
+                (line) => {
+                  controller.enqueue(eventChunk("log", { line }));
+                }
+              );
+              controller.enqueue(
+                eventChunk("log", {
+                  line: `> Trying legacy internal port ${LEGACY_APP_PORT} on host ${legacyHostPort}`,
+                })
+              );
+
+              const legacyReady = await waitForHttpReady(legacyHostPort, 45000);
+              if (legacyReady) {
+                previewHostPort = legacyHostPort;
+                previewContainerPort = LEGACY_APP_PORT;
+                ready = true;
+                controller.enqueue(
+                  eventChunk("log", {
+                    line: `> App responded on legacy port mapping localhost:${legacyHostPort}`,
+                  })
+                );
+              }
+            } catch {
+              // No legacy mapping found; continue with normal failure path.
             }
           }
 
