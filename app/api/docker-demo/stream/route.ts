@@ -262,6 +262,15 @@ function runCommand(
   });
 }
 
+function extractContainerId(lines: string[]) {
+  const idPattern = /\b[a-f0-9]{12,64}\b/i;
+  for (const line of lines) {
+    const match = line.match(idPattern);
+    if (match) return match[0];
+  }
+  return null;
+}
+
 function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
@@ -388,6 +397,7 @@ export async function GET(request: Request) {
 
         let previewHostPort = 3000;
         let previewContainerPort = 3000;
+        let launchedContainerId: string | null = null;
         let activeComposePath: string | null = null;
         const runCommands: Array<{ line: string; command: string }> = [];
 
@@ -435,14 +445,15 @@ export async function GET(request: Request) {
         }
 
         if (dockerfilePath) {
-          const preferredRunLine = `$ docker run --rm -it -p ${previewHostPort}:${previewContainerPort} ${imageName}`;
-          const preferredRunCommand = `docker run --rm -d --name ${escapeShellArg(containerName)} -p ${previewHostPort}:${previewContainerPort} ${escapeShellArg(imageName)}`;
+          const preferredRunLine = `$ docker run -it -p ${previewHostPort}:${previewContainerPort} ${imageName}`;
+          const preferredRunCommand = `docker run -d --name ${escapeShellArg(containerName)} -p ${previewHostPort}:${previewContainerPort} ${escapeShellArg(imageName)}`;
 
           controller.enqueue(eventChunk("command", { line: preferredRunLine }));
           try {
-            await runCommand(preferredRunCommand, undefined, (line) => {
+            const runLines = await runCommand(preferredRunCommand, undefined, (line) => {
               controller.enqueue(eventChunk("log", { line }));
             });
+            launchedContainerId = extractContainerId(runLines);
             controller.enqueue(
               eventChunk("log", {
                 line: "> Host port 3000 is available and was used.",
@@ -473,12 +484,13 @@ export async function GET(request: Request) {
               }
             );
 
-            const autoRunLine = `$ docker run --rm -it -p <auto>:${previewContainerPort} ${imageName}`;
-            const autoRunCommand = `docker run --rm -d --name ${escapeShellArg(containerName)} -p 127.0.0.1::${previewContainerPort} ${escapeShellArg(imageName)}`;
+            const autoRunLine = `$ docker run -it -p <auto>:${previewContainerPort} ${imageName}`;
+            const autoRunCommand = `docker run -d --name ${escapeShellArg(containerName)} -p 127.0.0.1::${previewContainerPort} ${escapeShellArg(imageName)}`;
             controller.enqueue(eventChunk("command", { line: autoRunLine }));
-            await runCommand(autoRunCommand, undefined, (line) => {
+            const autoRunLines = await runCommand(autoRunCommand, undefined, (line) => {
               controller.enqueue(eventChunk("log", { line }));
             });
+            launchedContainerId = extractContainerId(autoRunLines);
 
             previewHostPort = await resolveContainerHostPort(
               containerName,
@@ -502,8 +514,16 @@ export async function GET(request: Request) {
               line: `! HTTP did not become ready on localhost:${previewHostPort} within timeout`,
             })
           );
+          const logsTarget = launchedContainerId ?? containerName;
+          if (launchedContainerId) {
+            controller.enqueue(
+              eventChunk("log", {
+                line: `> Inspecting container logs for ${launchedContainerId}`,
+              })
+            );
+          }
           await runCommand(
-            `docker logs --tail 80 ${escapeShellArg(containerName)} || true`,
+            `docker logs --tail 80 ${escapeShellArg(logsTarget)} || true`,
             undefined,
             (line) => {
               controller.enqueue(eventChunk("log", { line }));
