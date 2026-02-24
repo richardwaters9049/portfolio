@@ -8,7 +8,7 @@ const Demowindow = () => {
         <p className='text-sm text-gray-600'>This is a module component.</p>
         <p className='text-sm text-gray-600'>You can customize this component as needed.</p>
         <button className='mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors'>
-          Click Me
+          Click Me!!
         </button>
         <p className='mt-2 text-sm text-gray-500'>This button does nothing for now.</p>
       </div>
