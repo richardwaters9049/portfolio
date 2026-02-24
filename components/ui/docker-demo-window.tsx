@@ -182,7 +182,6 @@ export default function DockerDemoWindow({
       {isOpen ? (
         <motion.div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          onClick={handleClose}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

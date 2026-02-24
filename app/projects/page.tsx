@@ -198,7 +198,7 @@ export default function Projects() {
                         </div>
 
                         {/* Image */}
-                        <div className="relative w-full h-[220px] rounded-lg overflow-hidden">
+                        <div className="relative rounded-lg overflow-hidden">
                             <Image
                                 src={project.image}
                                 alt={project.title}

@@ -399,6 +399,7 @@ export async function GET(request: Request) {
         let previewContainerPort = 3000;
         let launchedContainerId: string | null = null;
         let activeComposePath: string | null = null;
+        const workspaceMountArg = `-v ${escapeShellArg(repoDir)}:/workspace`;
         const runCommands: Array<{ line: string; command: string }> = [];
 
         if (dockerfilePath) {
@@ -446,7 +447,7 @@ export async function GET(request: Request) {
 
         if (dockerfilePath) {
           const preferredRunLine = `$ docker run -it -p ${previewHostPort}:${previewContainerPort} ${imageName}`;
-          const preferredRunCommand = `docker run -d --name ${escapeShellArg(containerName)} -p ${previewHostPort}:${previewContainerPort} ${escapeShellArg(imageName)}`;
+          const preferredRunCommand = `docker run -d --name ${escapeShellArg(containerName)} ${workspaceMountArg} -p ${previewHostPort}:${previewContainerPort} ${escapeShellArg(imageName)}`;
 
           controller.enqueue(eventChunk("command", { line: preferredRunLine }));
           try {
@@ -485,7 +486,7 @@ export async function GET(request: Request) {
             );
 
             const autoRunLine = `$ docker run -it -p <auto>:${previewContainerPort} ${imageName}`;
-            const autoRunCommand = `docker run -d --name ${escapeShellArg(containerName)} -p 127.0.0.1::${previewContainerPort} ${escapeShellArg(imageName)}`;
+            const autoRunCommand = `docker run -d --name ${escapeShellArg(containerName)} ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort} ${escapeShellArg(imageName)}`;
             controller.enqueue(eventChunk("command", { line: autoRunLine }));
             const autoRunLines = await runCommand(autoRunCommand, undefined, (line) => {
               controller.enqueue(eventChunk("log", { line }));
@@ -507,7 +508,7 @@ export async function GET(request: Request) {
           }
         }
 
-        const ready = await waitForHttpReady(previewHostPort, 45000);
+        let ready = await waitForHttpReady(previewHostPort, 45000);
         if (!ready) {
           controller.enqueue(
             eventChunk("log", {
@@ -522,16 +523,88 @@ export async function GET(request: Request) {
               })
             );
           }
-          await runCommand(
+          const logLines = await runCommand(
             `docker logs --tail 80 ${escapeShellArg(logsTarget)} || true`,
             undefined,
             (line) => {
               controller.enqueue(eventChunk("log", { line }));
             }
           );
-          throw new Error(
-            `Container started but did not serve HTTP on localhost:${previewHostPort} within 45 seconds`
+
+          const usageNeedsProjectArg = logLines.some((line) =>
+            /docker-nextpy\s+<project-name>/i.test(line)
           );
+
+          if (usageNeedsProjectArg && dockerfilePath) {
+            const defaultProjectName = "demo-project";
+            controller.enqueue(
+              eventChunk("log", {
+                line:
+                  "> Detected docker-nextpy CLI entrypoint; retrying with a default project name.",
+              })
+            );
+
+            await runCommand(
+              `docker rm -f ${escapeShellArg(containerName)} >/dev/null 2>&1 || true`,
+              undefined,
+              (line) => {
+                controller.enqueue(eventChunk("log", { line }));
+              }
+            );
+
+            const retryRunLine = `$ docker run -it -p <auto>:${previewContainerPort} ${imageName} ${defaultProjectName} (scaffold+serve)`;
+            const bootstrapCommand = [
+              "set -e",
+              `if command -v docker_pyNext_v3 >/dev/null 2>&1; then docker_pyNext_v3 ${escapeShellArg(
+                defaultProjectName
+              )}; else /usr/local/bin/docker_pyNext_v3 ${escapeShellArg(defaultProjectName)}; fi`,
+              `cd /workspace/${defaultProjectName} 2>/dev/null || cd /workspace`,
+              `if command -v bun >/dev/null 2>&1; then bun install || true; bun dev --host 0.0.0.0 --port ${previewContainerPort}; elif [ -f package.json ]; then npm install || true; npm run dev -- --hostname 0.0.0.0 --port ${previewContainerPort} || npm run start -- --hostname 0.0.0.0 --port ${previewContainerPort}; else python -m http.server ${previewContainerPort} --bind 0.0.0.0; fi`,
+            ].join("; ");
+            const retryRunCommand = `docker run -d --name ${escapeShellArg(containerName)} ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort} --entrypoint sh ${escapeShellArg(imageName)} -lc ${escapeShellArg(bootstrapCommand)}`;
+            controller.enqueue(eventChunk("command", { line: retryRunLine }));
+
+            const retryRunLines = await runCommand(retryRunCommand, undefined, (line) => {
+              controller.enqueue(eventChunk("log", { line }));
+            });
+
+            launchedContainerId = extractContainerId(retryRunLines);
+            previewHostPort = await resolveContainerHostPort(
+              containerName,
+              previewContainerPort,
+              (line) => {
+                controller.enqueue(eventChunk("log", { line }));
+              }
+            );
+            controller.enqueue(
+              eventChunk("log", {
+                line: `> Using auto-assigned host port ${previewHostPort}`,
+              })
+            );
+
+            ready = await waitForHttpReady(previewHostPort, 120000);
+            if (!ready) {
+              controller.enqueue(
+                eventChunk("log", {
+                  line: `! Retry still did not become ready on localhost:${previewHostPort} within timeout`,
+                })
+              );
+              const retryLogsTarget = launchedContainerId ?? containerName;
+              await runCommand(
+                `docker logs --tail 80 ${escapeShellArg(retryLogsTarget)} || true`,
+                undefined,
+                (line) => {
+                  controller.enqueue(eventChunk("log", { line }));
+                }
+              );
+            }
+          }
+
+          if (!ready) {
+            throw new Error(
+              `Container started but did not serve HTTP on localhost:${previewHostPort} within 45 seconds`
+            );
+          }
         }
 
         const proxyUrl = `${requestUrl.origin}/api/docker-demo/preview/${sessionId}`;
