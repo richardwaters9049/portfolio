@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { setDockerDemoSession } from "@/lib/docker-demo-store";
 
 export const runtime = "nodejs";
 
@@ -254,6 +256,33 @@ function runCommand(
   });
 }
 
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitForHttpReady(port: number, timeoutMs = 60000) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      const response = await fetch(`http://127.0.0.1:${port}`, {
+        redirect: "manual",
+        cache: "no-store",
+      });
+
+      if (response.status >= 200 && response.status < 500) {
+        return true;
+      }
+    } catch {
+      // Keep polling until timeout.
+    }
+
+    await sleep(500);
+  }
+
+  return false;
+}
+
 async function resolveContainerHostPort(
   containerName: string,
   containerPort: number,
@@ -286,11 +315,14 @@ export async function GET(request: Request) {
   const repoUrl = repoUrlRaw.endsWith(".git") ? repoUrlRaw : `${repoUrlRaw}.git`;
   const repoNameFromUrl = repoUrl.split("/").pop()?.replace(/\.git$/i, "") || "DockerScripts";
   const safeRepoName = repoNameFromUrl.replace(/[^a-zA-Z0-9._-]/g, "") || "DockerScripts";
+  const sessionId = randomUUID();
+  const sessionKey = sessionId.replace(/-/g, "").slice(0, 12);
 
   const demoRoot = "/tmp/docker-demo-workspace";
-  const repoDir = path.join(demoRoot, safeRepoName);
-  const imageName = safeRepoName.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
-  const containerName = `${imageName}-demo`;
+  const repoDir = path.join(demoRoot, `${safeRepoName}-${sessionKey}`);
+  const imageNameBase = safeRepoName.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
+  const imageName = `${imageNameBase}:${sessionKey}`;
+  const containerName = `${imageNameBase}-demo-${sessionKey}`;
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -350,6 +382,7 @@ export async function GET(request: Request) {
 
         let previewHostPort = 3000;
         let previewContainerPort = 3000;
+        let activeComposePath: string | null = null;
         const runCommands: Array<{ line: string; command: string }> = [];
 
         if (dockerfilePath) {
@@ -375,6 +408,7 @@ export async function GET(request: Request) {
           const composeContents = await readFile(composeFilePath, "utf8");
           previewHostPort = inferPortFromCompose(composeContents);
           previewContainerPort = 3000;
+          activeComposePath = composeFilePath;
 
           runCommands.push({
             line: `$ docker compose -f ${composeFilePath} down --remove-orphans || true`,
@@ -450,6 +484,24 @@ export async function GET(request: Request) {
           }
         }
 
+        const ready = await waitForHttpReady(previewHostPort, 45000);
+        if (!ready) {
+          throw new Error(
+            `Container started but did not serve HTTP on localhost:${previewHostPort} within 45 seconds`
+          );
+        }
+
+        const proxyUrl = `${requestUrl.origin}/api/docker-demo/preview/${sessionId}`;
+        setDockerDemoSession({
+          sessionId,
+          hostPort: previewHostPort,
+          containerPort: previewContainerPort,
+          containerName,
+          repoDir,
+          composeFilePath: activeComposePath,
+          createdAt: Date.now(),
+        });
+
         controller.enqueue(
           eventChunk("log", { line: "> Booting containers..." })
         );
@@ -463,12 +515,13 @@ export async function GET(request: Request) {
         );
         controller.enqueue(
           eventChunk("log", {
-            line: `> Starting Next.js app on http://localhost:${previewHostPort}`,
+            line: `> Starting app preview at ${proxyUrl}`,
           })
         );
         controller.enqueue(
           eventChunk("ready", {
-            url: `http://localhost:${previewHostPort}`,
+            sessionId,
+            url: proxyUrl,
             containerName,
           })
         );

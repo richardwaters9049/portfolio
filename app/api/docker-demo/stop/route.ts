@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
+import { deleteDockerDemoSession, getDockerDemoSession } from "@/lib/docker-demo-store";
 
 export const runtime = "nodejs";
 
@@ -9,17 +10,19 @@ function escapeShellArg(value: string) {
 }
 
 function containerNameFromRepoUrl(repoUrl: string) {
-  const withGit = repoUrl.endsWith(".git") ? repoUrl : `${repoUrl}.git`;
-  const repoName = withGit.split("/").pop()?.replace(/\.git$/i, "") || "DockerScripts";
-  const safeRepo = repoName.replace(/[^a-zA-Z0-9._-]/g, "") || "DockerScripts";
+  const safeRepo = safeRepoNameFromRepoUrl(repoUrl);
   const imageName = safeRepo.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
   return `${imageName}-demo`;
 }
 
-function repoDirFromRepoUrl(repoUrl: string) {
+function safeRepoNameFromRepoUrl(repoUrl: string) {
   const withGit = repoUrl.endsWith(".git") ? repoUrl : `${repoUrl}.git`;
   const repoName = withGit.split("/").pop()?.replace(/\.git$/i, "") || "DockerScripts";
-  const safeRepo = repoName.replace(/[^a-zA-Z0-9._-]/g, "") || "DockerScripts";
+  return repoName.replace(/[^a-zA-Z0-9._-]/g, "") || "DockerScripts";
+}
+
+function repoDirFromRepoUrl(repoUrl: string) {
+  const safeRepo = safeRepoNameFromRepoUrl(repoUrl);
   return path.join("/tmp/docker-demo-workspace", safeRepo);
 }
 
@@ -75,9 +78,22 @@ export async function POST(request: Request) {
   try {
     let repoUrl = "https://github.com/richardwaters9049/DockerScripts.git";
     let containerName = "dockerscripts-demo";
+    let sessionId: string | null = null;
+    let sessionComposeFilePath: string | null = null;
+    let sessionRepoDir: string | null = null;
 
     try {
-      const payload = (await request.json()) as { repoUrl?: string };
+      const payload = (await request.json()) as { repoUrl?: string; sessionId?: string };
+      if (payload.sessionId) {
+        sessionId = payload.sessionId;
+        const session = getDockerDemoSession(payload.sessionId);
+        if (session) {
+          containerName = session.containerName;
+          sessionComposeFilePath = session.composeFilePath;
+          sessionRepoDir = session.repoDir;
+        }
+      }
+
       if (
         payload.repoUrl &&
         /^https:\/\/github\.com\/[^/]+\/[^/]+(?:\.git)?\/?$/.test(payload.repoUrl)
@@ -90,12 +106,27 @@ export async function POST(request: Request) {
     }
 
     await runStop(`docker rm -f ${escapeShellArg(containerName)} || true`);
-    const repoDir = repoDirFromRepoUrl(repoUrl);
-    const composeFilePath = await findComposeFile(repoDir).catch(() => null);
+    const repoDir = sessionRepoDir ?? repoDirFromRepoUrl(repoUrl);
+    const composeFilePath =
+      sessionComposeFilePath ?? (await findComposeFile(repoDir).catch(() => null));
     if (composeFilePath) {
       await runStop(
         `docker compose -f ${escapeShellArg(composeFilePath)} down --remove-orphans || true`
       );
+    }
+    await runStop(`rm -rf ${escapeShellArg(repoDir)} || true`);
+
+    if (!sessionId) {
+      const safeRepo = safeRepoNameFromRepoUrl(repoUrl);
+      const imageName = safeRepo.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
+      await runStop(
+        `for cid in $(docker ps -aq --filter name='^/${imageName}-demo-'); do docker rm -f "$cid" || true; done`
+      );
+      await runStop(`rm -rf /tmp/docker-demo-workspace/${safeRepo}-* || true`);
+    }
+
+    if (sessionId) {
+      deleteDockerDemoSession(sessionId);
     }
 
     return Response.json({ ok: true });

@@ -19,7 +19,9 @@ export default function DockerDemoWindow({
   const [isRunning, setIsRunning] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isTerminalVisible, setIsTerminalVisible] = useState(true);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
+  const sessionIdRef = useRef<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const runCompletedRef = useRef(false);
   const repoName = (() => {
@@ -49,6 +51,10 @@ export default function DockerDemoWindow({
     setRenderedLines((prev) => [...prev, line]);
   }, []);
 
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
+
   const stopExistingRun = useCallback(async () => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -62,7 +68,7 @@ export default function DockerDemoWindow({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ repoUrl }),
+        body: JSON.stringify({ repoUrl, sessionId: sessionIdRef.current }),
       });
     } catch {
       // Ignore cleanup failures in UI.
@@ -77,6 +83,7 @@ export default function DockerDemoWindow({
 
     setRenderedLines([]);
     setPreviewUrl(null);
+    setSessionId(null);
     setIsTerminalVisible(true);
     setIsRunning(true);
     runCompletedRef.current = false;
@@ -88,7 +95,7 @@ export default function DockerDemoWindow({
 
     const parsePayload = (event: MessageEvent) => {
       try {
-        return JSON.parse(event.data) as { line?: string; url?: string };
+        return JSON.parse(event.data) as { line?: string; url?: string; sessionId?: string };
       } catch {
         return {};
       }
@@ -108,6 +115,9 @@ export default function DockerDemoWindow({
       const payload = parsePayload(event as MessageEvent);
       if (payload.url) {
         setPreviewUrl(payload.url);
+      }
+      if (payload.sessionId) {
+        setSessionId(payload.sessionId);
       }
       appendLine(
         payload.url
