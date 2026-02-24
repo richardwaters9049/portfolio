@@ -18,6 +18,7 @@ export default function DockerDemoWindow({
   const [renderedLines, setRenderedLines] = useState<string[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isTerminalVisible, setIsTerminalVisible] = useState(true);
   const terminalRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const runCompletedRef = useRef(false);
@@ -37,11 +38,11 @@ export default function DockerDemoWindow({
     `$ git clone ${repoUrl}`,
     `$ cd ${repoName}`,
     `$ docker build -t ${imageName} .`,
-    `$ docker run --rm -it -p 3000:3000 ${imageName}`,
+    `$ docker run --rm -it -p <HOST_PORT>:3000 ${imageName}`,
     "",
     "> Booting containers...",
     "> Installing dependencies...",
-    "> Starting Next.js app on http://localhost:3000",
+    "> Starting app on http://localhost:<HOST_PORT>",
   ];
 
   const appendLine = useCallback((line: string) => {
@@ -76,6 +77,7 @@ export default function DockerDemoWindow({
 
     setRenderedLines([]);
     setPreviewUrl(null);
+    setIsTerminalVisible(true);
     setIsRunning(true);
     runCompletedRef.current = false;
 
@@ -118,6 +120,7 @@ export default function DockerDemoWindow({
       const payload = parsePayload(event as MessageEvent);
       appendLine(payload.line ? `! ${payload.line}` : "! Stream error");
       setIsRunning(false);
+      setIsTerminalVisible(true);
       runCompletedRef.current = true;
       source.close();
       eventSourceRef.current = null;
@@ -125,6 +128,7 @@ export default function DockerDemoWindow({
 
     source.addEventListener("done", () => {
       setIsRunning(false);
+      setIsTerminalVisible(false);
       runCompletedRef.current = true;
       source.close();
       eventSourceRef.current = null;
@@ -136,6 +140,7 @@ export default function DockerDemoWindow({
       }
       appendLine("! Lost connection to demo stream");
       setIsRunning(false);
+      setIsTerminalVisible(true);
       runCompletedRef.current = true;
       source.close();
       eventSourceRef.current = null;
@@ -200,25 +205,40 @@ export default function DockerDemoWindow({
             </div>
 
             <div className="space-y-5 p-5">
-              <div
-                ref={terminalRef}
-                className="max-h-[60vh] overflow-auto rounded-md border border-emerald-500/25 bg-[#0a0d0a] p-4 font-mono text-sm leading-7 text-emerald-300"
-              >
-                {(renderedLines.length ? renderedLines : scriptPreview).map((line, index) => (
-                  <p key={index} className="whitespace-pre-wrap break-words">
-                    {line || "\u00A0"}
-                  </p>
-                ))}
-                {isRunning ? (
-                  <p className="animate-pulse text-emerald-200/80">█</p>
-                ) : null}
-              </div>
+              {isTerminalVisible ? (
+                <div
+                  ref={terminalRef}
+                  className="max-h-[60vh] overflow-auto rounded-md border border-emerald-500/25 bg-[#0a0d0a] p-4 font-mono text-sm leading-7 text-emerald-300"
+                >
+                  {(renderedLines.length ? renderedLines : scriptPreview).map((line, index) => (
+                    <p key={index} className="whitespace-pre-wrap break-words">
+                      {line || "\u00A0"}
+                    </p>
+                  ))}
+                  {isRunning ? (
+                    <p className="animate-pulse text-emerald-200/80">█</p>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="rounded-md border border-emerald-500/25 bg-[#0a0d0a] px-4 py-2 font-mono text-xs text-emerald-300/90">
+                  Script finished. Terminal output hidden while preview stays active.
+                </div>
+              )}
 
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="font-mono text-xs text-emerald-200/80">
                   This terminal runs real setup commands and streams live output.
                 </p>
                 <div className="flex items-center gap-2">
+                  {previewUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => setIsTerminalVisible((prev) => !prev)}
+                      className="rounded border border-emerald-500/40 px-3 py-1.5 font-mono text-xs uppercase tracking-[0.1em] text-emerald-200 transition hover:bg-emerald-500/15 hover:text-white"
+                    >
+                      {isTerminalVisible ? "Hide Terminal" : "Show Terminal"}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={startRealRun}
@@ -244,7 +264,7 @@ export default function DockerDemoWindow({
                   <iframe
                     src={previewUrl}
                     title="Docker Script Live Demo"
-                    className="h-[420px] w-full bg-white"
+                    className={`w-full bg-white ${isTerminalVisible ? "h-[420px]" : "h-[70vh]"}`}
                   />
                 </div>
               ) : null}

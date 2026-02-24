@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { readdir, readFile, writeFile } from "node:fs/promises";
+import net from "node:net";
 import path from "node:path";
 
 export const runtime = "nodejs";
@@ -244,6 +245,68 @@ function runCommand(
   });
 }
 
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+function checkPortAvailable(port: number) {
+  return new Promise<boolean>((resolve) => {
+    const server = net.createServer();
+    server.unref();
+
+    server.on("error", () => resolve(false));
+    server.listen({ port, host: "127.0.0.1" }, () => {
+      server.close(() => resolve(true));
+    });
+  });
+}
+
+function checkPortOpen(port: number) {
+  return new Promise<boolean>((resolve) => {
+    const socket = net.connect({ port, host: "127.0.0.1" });
+    let settled = false;
+
+    const finish = (value: boolean) => {
+      if (settled) return;
+      settled = true;
+      socket.destroy();
+      resolve(value);
+    };
+
+    socket.setTimeout(600);
+    socket.once("connect", () => finish(true));
+    socket.once("timeout", () => finish(false));
+    socket.once("error", () => finish(false));
+  });
+}
+
+async function findAvailableHostPort(preferred: number, fallbackStart: number, attempts = 80) {
+  if (await checkPortAvailable(preferred)) {
+    return preferred;
+  }
+
+  for (let port = fallbackStart; port < fallbackStart + attempts; port += 1) {
+    if (await checkPortAvailable(port)) {
+      return port;
+    }
+  }
+
+  throw new Error("No available host port found for Docker demo preview");
+}
+
+async function waitForPortToOpen(port: number, timeoutMs = 60000) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    if (await checkPortOpen(port)) {
+      return true;
+    }
+    await sleep(500);
+  }
+
+  return false;
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const repoUrlParam = requestUrl.searchParams.get("repoUrl");
@@ -260,7 +323,6 @@ export async function GET(request: Request) {
   const repoDir = path.join(demoRoot, safeRepoName);
   const imageName = safeRepoName.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
   const containerName = `${imageName}-demo`;
-  const hostPort = 3010;
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -318,11 +380,22 @@ export async function GET(request: Request) {
           );
         }
 
-        let previewHostPort = hostPort;
+        let previewHostPort = 3000;
+        let previewContainerPort = 3000;
         const runCommands: Array<{ line: string; command: string }> = [];
 
         if (dockerfilePath) {
           const buildContext = path.dirname(dockerfilePath);
+          previewContainerPort = generatedDockerPort ?? 3000;
+          previewHostPort = await findAvailableHostPort(3000, 3010);
+          controller.enqueue(
+            eventChunk("log", {
+              line:
+                previewHostPort === 3000
+                  ? "> Host port 3000 is available and will be used."
+                  : `> Host port 3000 is in use; using ${previewHostPort} instead.`,
+            })
+          );
           const buildLine =
             buildContext === repoDir
               ? `$ docker build -t ${imageName} .`
@@ -339,12 +412,13 @@ export async function GET(request: Request) {
             command: `docker rm -f ${escapeShellArg(containerName)} || true`,
           });
           runCommands.push({
-            line: `$ docker run --rm -it -p ${previewHostPort}:${generatedDockerPort ?? 3000} ${imageName}`,
-            command: `docker run --rm -d --name ${escapeShellArg(containerName)} -p ${previewHostPort}:${generatedDockerPort ?? 3000} ${escapeShellArg(imageName)}`,
+            line: `$ docker run --rm -it -p ${previewHostPort}:${previewContainerPort} ${imageName}`,
+            command: `docker run --rm -d --name ${escapeShellArg(containerName)} -p ${previewHostPort}:${previewContainerPort} ${escapeShellArg(imageName)}`,
           });
         } else if (composeFilePath) {
           const composeContents = await readFile(composeFilePath, "utf8");
           previewHostPort = inferPortFromCompose(composeContents);
+          previewContainerPort = 3000;
 
           runCommands.push({
             line: `$ docker compose -f ${composeFilePath} down --remove-orphans || true`,
@@ -364,6 +438,13 @@ export async function GET(request: Request) {
           });
         }
 
+        const serviceReady = await waitForPortToOpen(previewHostPort, 60000);
+        if (!serviceReady) {
+          throw new Error(
+            `Service did not open localhost:${previewHostPort} within 60 seconds after startup`
+          );
+        }
+
         controller.enqueue(
           eventChunk("log", { line: "> Booting containers..." })
         );
@@ -372,7 +453,7 @@ export async function GET(request: Request) {
         );
         controller.enqueue(
           eventChunk("log", {
-            line: `> Mapped container port 3000 to host port ${previewHostPort} for in-window preview`,
+            line: `> Mapped container port ${previewContainerPort} to host port ${previewHostPort} for in-window preview`,
           })
         );
         controller.enqueue(
