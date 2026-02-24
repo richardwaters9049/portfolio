@@ -50,8 +50,8 @@ const projects: Project[] = [
         title: "Docker Script",
         description:
             "Dockerized Python + Next.js script runner for repeatable local dev and testing workflows.",
-        image: "/images/GhostHack.png",
-        github: "https://github.com/richywaters/docker-pynext-scriptatest",
+        image: "/images/IT.png",
+        github: "https://github.com/richardwaters9049/DockerScripts.git",
         demo: "docker-script-terminal",
         demoMode: "terminal",
     },
@@ -213,7 +213,7 @@ export default function Projects() {
             <DockerDemoWindow
                 isOpen={isDockerDemoOpen}
                 onClose={() => setIsDockerDemoOpen(false)}
-                repoUrl={dockerProject?.github ?? "https://github.com/richywaters/docker-pynext-scriptatest.git"}
+                repoUrl={dockerProject?.github ?? "https://github.com/richardwaters9049/DockerScripts.git"}
             />
         </section>
     );

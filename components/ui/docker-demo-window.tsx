@@ -9,19 +9,6 @@ type DockerDemoWindowProps = {
   repoUrl: string;
 };
 
-const scriptPreview = [
-  "# docker-pynext-scriptatest",
-  "",
-  "$ git clone https://github.com/richywaters/docker-pynext-scriptatest.git",
-  "$ cd docker-pynext-scriptatest",
-  "$ docker build -t pynext-scriptatest .",
-  "$ docker run --rm -it -p 3000:3000 pynext-scriptatest",
-  "",
-  "> Booting containers...",
-  "> Installing dependencies...",
-  "> Starting Next.js app on http://localhost:3000",
-];
-
 export default function DockerDemoWindow({
   isOpen,
   onClose,
@@ -33,6 +20,28 @@ export default function DockerDemoWindow({
   const terminalRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const runCompletedRef = useRef(false);
+  const repoName = (() => {
+    try {
+      const parsed = new URL(repoUrl);
+      const lastSegment = parsed.pathname.split("/").filter(Boolean).pop() ?? "DockerScripts";
+      return lastSegment.replace(/\.git$/i, "") || "DockerScripts";
+    } catch {
+      return "DockerScripts";
+    }
+  })();
+  const imageName = repoName.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
+  const scriptPreview = [
+    `# ${repoName}`,
+    "",
+    `$ git clone ${repoUrl}`,
+    `$ cd ${repoName}`,
+    `$ docker build -t ${imageName} .`,
+    `$ docker run --rm -it -p 3000:3000 ${imageName}`,
+    "",
+    "> Booting containers...",
+    "> Installing dependencies...",
+    "> Starting Next.js app on http://localhost:3000",
+  ];
 
   const appendLine = useCallback((line: string) => {
     setRenderedLines((prev) => [...prev, line]);
@@ -46,11 +55,17 @@ export default function DockerDemoWindow({
     runCompletedRef.current = true;
 
     try {
-      await fetch("/api/docker-demo/stop", { method: "POST" });
+      await fetch("/api/docker-demo/stop", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ repoUrl }),
+      });
     } catch {
       // Ignore cleanup failures in UI.
     }
-  }, []);
+  }, [repoUrl]);
 
   const startRealRun = useCallback(() => {
     if (eventSourceRef.current) {
@@ -165,7 +180,7 @@ export default function DockerDemoWindow({
             <span className="h-3 w-3 rounded-full bg-emerald-500" />
           </div>
           <p className="font-mono text-xs uppercase tracking-[0.18em] text-emerald-200/90">
-            docker-pynext-scriptatest
+            {repoName}
           </p>
           <button
             type="button"
@@ -204,7 +219,7 @@ export default function DockerDemoWindow({
                 Run Script
               </button>
               <Link
-                href="https://github.com/richywaters/docker-pynext-scriptatest"
+                href={repoUrl}
                 target="_blank"
                 className="rounded border border-emerald-500/40 px-3 py-1.5 font-mono text-xs uppercase tracking-[0.1em] text-emerald-200 transition hover:bg-emerald-500/15 hover:text-white"
               >

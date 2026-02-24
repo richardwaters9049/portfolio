@@ -2,6 +2,18 @@ import { spawn } from "node:child_process";
 
 export const runtime = "nodejs";
 
+function escapeShellArg(value: string) {
+  return `'${value.replace(/'/g, `'\"'\"'`)}'`;
+}
+
+function containerNameFromRepoUrl(repoUrl: string) {
+  const withGit = repoUrl.endsWith(".git") ? repoUrl : `${repoUrl}.git`;
+  const repoName = withGit.split("/").pop()?.replace(/\.git$/i, "") || "DockerScripts";
+  const safeRepo = repoName.replace(/[^a-zA-Z0-9._-]/g, "") || "DockerScripts";
+  const imageName = safeRepo.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
+  return `${imageName}-demo`;
+}
+
 function runStop(command: string) {
   return new Promise<void>((resolve, reject) => {
     const child = spawn("sh", ["-lc", command], {
@@ -19,9 +31,23 @@ function runStop(command: string) {
   });
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    await runStop("docker rm -f pynext-scriptatest-demo || true");
+    let containerName = "dockerscripts-demo";
+
+    try {
+      const payload = (await request.json()) as { repoUrl?: string };
+      if (
+        payload.repoUrl &&
+        /^https:\/\/github\.com\/[^/]+\/[^/]+(?:\.git)?\/?$/.test(payload.repoUrl)
+      ) {
+        containerName = containerNameFromRepoUrl(payload.repoUrl.replace(/\/$/, ""));
+      }
+    } catch {
+      // Ignore invalid JSON payload.
+    }
+
+    await runStop(`docker rm -f ${escapeShellArg(containerName)} || true`);
     return Response.json({ ok: true });
   } catch (error) {
     return Response.json(

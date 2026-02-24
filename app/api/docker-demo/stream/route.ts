@@ -11,6 +11,10 @@ function eventChunk(type: string, payload: StreamPayload) {
   return encoder.encode(`event: ${type}\ndata: ${JSON.stringify(payload)}\n\n`);
 }
 
+function escapeShellArg(value: string) {
+  return `'${value.replace(/'/g, `'\"'\"'`)}'`;
+}
+
 function splitOutput(output: string) {
   return output
     .replace(/\r\n/g, "\n")
@@ -57,15 +61,19 @@ function runCommand(
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const repoUrlParam = requestUrl.searchParams.get("repoUrl");
-  const repoUrl =
+  const repoUrlRaw =
     repoUrlParam && /^https:\/\/github\.com\/[^/]+\/[^/]+(?:\.git)?\/?$/.test(repoUrlParam)
       ? repoUrlParam.replace(/\/$/, "")
-      : "https://github.com/richywaters/docker-pynext-scriptatest.git";
+      : "https://github.com/richardwaters9049/DockerScripts.git";
+
+  const repoUrl = repoUrlRaw.endsWith(".git") ? repoUrlRaw : `${repoUrlRaw}.git`;
+  const repoNameFromUrl = repoUrl.split("/").pop()?.replace(/\.git$/i, "") || "DockerScripts";
+  const safeRepoName = repoNameFromUrl.replace(/[^a-zA-Z0-9._-]/g, "") || "DockerScripts";
 
   const demoRoot = "/tmp/docker-demo-workspace";
-  const repoDir = path.join(demoRoot, "docker-pynext-scriptatest");
-  const imageName = "pynext-scriptatest";
-  const containerName = "pynext-scriptatest-demo";
+  const repoDir = path.join(demoRoot, safeRepoName);
+  const imageName = safeRepoName.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
+  const containerName = `${imageName}-demo`;
   const hostPort = 3010;
 
   const stream = new ReadableStream({
@@ -73,7 +81,7 @@ export async function GET(request: Request) {
       try {
         controller.enqueue(
           eventChunk("command", {
-            line: "# docker-pynext-scriptatest",
+            line: `# ${safeRepoName}`,
           })
         );
         controller.enqueue(
@@ -89,27 +97,27 @@ export async function GET(request: Request) {
         const commands = [
           {
             line: `$ rm -rf ${repoDir}`,
-            command: `rm -rf ${repoDir}`,
+            command: `rm -rf ${escapeShellArg(repoDir)}`,
           },
           {
             line: `$ git clone ${repoUrl}`,
-            command: `git clone ${repoUrl} /tmp/docker-demo-workspace/docker-pynext-scriptatest`,
+            command: `git clone ${escapeShellArg(repoUrl)} ${escapeShellArg(repoDir)}`,
           },
           {
-            line: "$ cd docker-pynext-scriptatest",
-            command: `test -d ${repoDir}`,
+            line: `$ cd ${safeRepoName}`,
+            command: `test -d ${escapeShellArg(repoDir)}`,
           },
           {
             line: `$ docker build -t ${imageName} .`,
-            command: `docker build -t ${imageName} ${repoDir}`,
+            command: `docker build -t ${escapeShellArg(imageName)} ${escapeShellArg(repoDir)}`,
           },
           {
             line: `$ docker rm -f ${containerName} || true`,
-            command: `docker rm -f ${containerName} || true`,
+            command: `docker rm -f ${escapeShellArg(containerName)} || true`,
           },
           {
             line: `$ docker run --rm -it -p 3000:3000 ${imageName}`,
-            command: `docker run --rm -d --name ${containerName} -p ${hostPort}:3000 ${imageName}`,
+            command: `docker run --rm -d --name ${escapeShellArg(containerName)} -p ${hostPort}:3000 ${escapeShellArg(imageName)}`,
           },
         ];
 
