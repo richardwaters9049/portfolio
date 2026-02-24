@@ -302,6 +302,18 @@ async function waitForHttpReady(port: number, timeoutMs = 60000) {
   return false;
 }
 
+async function isContainerRunning(containerTarget: string) {
+  const lines = await runCommand(
+    `docker inspect -f '{{.State.Running}}' ${escapeShellArg(containerTarget)} 2>/dev/null || true`,
+    undefined,
+    () => {
+      // suppress inspect output in terminal stream
+    }
+  );
+
+  return lines.some((line) => line.trim() === "true");
+}
+
 async function resolveContainerHostPort(
   containerName: string,
   containerPort: number,
@@ -566,9 +578,9 @@ export async function GET(request: Request) {
                 : ` -p 127.0.0.1::${LEGACY_APP_PORT}`;
             const retryRunLine = `$ docker run -it -p <auto>:${previewContainerPort} ${imageName} ${defaultProjectName} (scaffold+serve)`;
             const bootstrapCommand = [
-              "set -e",
+              "set -u",
               `PROJECT_NAME=${escapeShellArg(defaultProjectName)}`,
-              `if command -v docker_pyNext_v3 >/dev/null 2>&1; then docker_pyNext_v3 "$PROJECT_NAME"; else /usr/local/bin/docker_pyNext_v3 "$PROJECT_NAME"; fi`,
+              `if command -v docker_pyNext_v3 >/dev/null 2>&1; then docker_pyNext_v3 "$PROJECT_NAME" || true; else /usr/local/bin/docker_pyNext_v3 "$PROJECT_NAME" || true; fi`,
               `TARGET_DIR=""`,
               `if [ -d "/workspace/$PROJECT_NAME" ]; then TARGET_DIR="/workspace/$PROJECT_NAME"; fi`,
               `if [ -z "$TARGET_DIR" ]; then TARGET_DIR="$(find /workspace -maxdepth 5 -type d -name "$PROJECT_NAME" | head -n 1)"; fi`,
@@ -576,7 +588,7 @@ export async function GET(request: Request) {
               `if [ -z "$TARGET_DIR" ]; then TARGET_DIR="/workspace"; fi`,
               `cd "$TARGET_DIR"`,
               `echo "Starting app from: $TARGET_DIR"`,
-              `if command -v bun >/dev/null 2>&1 && [ -f package.json ]; then bun install || true; bun run dev --host 0.0.0.0 --port ${previewContainerPort} || bun run start -- --host 0.0.0.0 --port ${previewContainerPort}; elif [ -f package.json ]; then npm install || true; npm run dev -- --hostname 0.0.0.0 --port ${previewContainerPort} || npm run start -- --hostname 0.0.0.0 --port ${previewContainerPort}; else python -m http.server ${previewContainerPort} --bind 0.0.0.0; fi`,
+              `if command -v bun >/dev/null 2>&1 && [ -f package.json ]; then bun install || true; bun run dev --host 0.0.0.0 --port ${previewContainerPort} || bun run start -- --host 0.0.0.0 --port ${previewContainerPort} || busybox httpd -f -p ${previewContainerPort} -h "$TARGET_DIR"; elif [ -f package.json ]; then npm install || true; npm run dev -- --hostname 0.0.0.0 --port ${previewContainerPort} || npm run start -- --hostname 0.0.0.0 --port ${previewContainerPort} || busybox httpd -f -p ${previewContainerPort} -h "$TARGET_DIR"; else busybox httpd -f -p ${previewContainerPort} -h "$TARGET_DIR"; fi`,
             ].join("; ");
             const retryRunCommand = `docker run -d --name ${escapeShellArg(containerName)} -e CI=1 -e NEXT_TELEMETRY_DISABLED=1 ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort}${retryLegacyPortArg} --entrypoint sh ${escapeShellArg(imageName)} -lc ${escapeShellArg(bootstrapCommand)}`;
             controller.enqueue(eventChunk("command", { line: retryRunLine }));
@@ -599,7 +611,23 @@ export async function GET(request: Request) {
               })
             );
 
+            controller.enqueue(
+              eventChunk("log", {
+                line: `> Waiting for app readiness on localhost:${previewHostPort} (up to 120s)...`,
+              })
+            );
+
             ready = await waitForHttpReady(previewHostPort, 120000);
+            if (!ready) {
+              const running = await isContainerRunning(containerName);
+              if (!running) {
+                controller.enqueue(
+                  eventChunk("log", {
+                    line: `! Container ${containerName} exited before becoming ready`,
+                  })
+                );
+              }
+            }
             if (!ready) {
               controller.enqueue(
                 eventChunk("log", {
