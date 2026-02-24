@@ -138,7 +138,7 @@ export default function DockerDemoWindow({
 
     source.addEventListener("done", () => {
       setIsRunning(false);
-      setIsTerminalVisible(false);
+      setIsTerminalVisible(true);
       runCompletedRef.current = true;
       source.close();
       eventSourceRef.current = null;

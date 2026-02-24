@@ -38,11 +38,17 @@ async function findDockerfile(repoDir: string, depth = 0): Promise<string | null
   if (depth > 5) return null;
 
   const entries = await readdir(repoDir, { withFileTypes: true });
-  const rootDockerfile = entries.find(
-    (entry) => entry.isFile() && entry.name.toLowerCase() === "dockerfile"
-  );
-  if (rootDockerfile) {
-    return path.join(repoDir, rootDockerfile.name);
+  const rootDockerfiles = entries
+    .filter((entry) => entry.isFile() && entry.name.toLowerCase().startsWith("dockerfile"))
+    .sort((a, b) => {
+      const aLower = a.name.toLowerCase();
+      const bLower = b.name.toLowerCase();
+      if (aLower === "dockerfile") return -1;
+      if (bLower === "dockerfile") return 1;
+      return a.name.length - b.name.length;
+    });
+  if (rootDockerfiles.length > 0) {
+    return path.join(repoDir, rootDockerfiles[0].name);
   }
 
   for (const entry of entries) {
