@@ -302,6 +302,37 @@ async function waitForHttpReady(port: number, timeoutMs = 60000) {
   return false;
 }
 
+async function waitForHttpReadyOrExit(
+  port: number,
+  containerTarget: string,
+  timeoutMs = 60000
+) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    if (!(await isContainerRunning(containerTarget))) {
+      return { ready: false, exitedEarly: true };
+    }
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${port}`, {
+        redirect: "manual",
+        cache: "no-store",
+      });
+
+      if (response.status >= 200 && response.status < 500) {
+        return { ready: true, exitedEarly: false };
+      }
+    } catch {
+      // Keep polling until timeout.
+    }
+
+    await sleep(500);
+  }
+
+  return { ready: false, exitedEarly: false };
+}
+
 async function isContainerRunning(containerTarget: string) {
   const lines = await runCommand(
     `docker inspect -f '{{.State.Running}}' ${escapeShellArg(containerTarget)} 2>/dev/null || true`,
@@ -528,11 +559,19 @@ export async function GET(request: Request) {
           }
         }
 
-        let ready = await waitForHttpReady(previewHostPort, 45000);
+        const initialContainerTarget = launchedContainerId ?? containerName;
+        let { ready, exitedEarly } = dockerfilePath
+          ? await waitForHttpReadyOrExit(previewHostPort, initialContainerTarget, 12000)
+          : {
+              ready: await waitForHttpReady(previewHostPort, 45000),
+              exitedEarly: false,
+            };
         if (!ready) {
           controller.enqueue(
             eventChunk("log", {
-              line: `! HTTP did not become ready on localhost:${previewHostPort} within timeout`,
+              line: exitedEarly
+                ? `! Container exited before app became ready on localhost:${previewHostPort}`
+                : `! HTTP did not become ready on localhost:${previewHostPort} within timeout`,
             })
           );
           const logsTarget = launchedContainerId ?? containerName;
@@ -579,6 +618,9 @@ export async function GET(request: Request) {
             const retryRunLine = `$ docker run -it -p <auto>:${previewContainerPort} ${imageName} ${defaultProjectName} (scaffold+serve)`;
             const bootstrapCommand = [
               "set -u",
+              `export PATH="$PATH:/root/.bun/bin:/home/root/.bun/bin"`,
+              `if ! command -v bun >/dev/null 2>&1; then if [ -x /root/.bun/bin/bun ]; then ln -sf /root/.bun/bin/bun /usr/local/bin/bun || true; fi; fi`,
+              `if ! command -v bun >/dev/null 2>&1; then curl -fsSL https://bun.sh/install | bash || true; export PATH="$PATH:/root/.bun/bin:/home/root/.bun/bin"; fi`,
               `PROJECT_NAME=${escapeShellArg(defaultProjectName)}`,
               `if command -v docker_pyNext_v3 >/dev/null 2>&1; then docker_pyNext_v3 "$PROJECT_NAME" || true; else /usr/local/bin/docker_pyNext_v3 "$PROJECT_NAME" || true; fi`,
               `TARGET_DIR=""`,
@@ -588,7 +630,7 @@ export async function GET(request: Request) {
               `if [ -z "$TARGET_DIR" ]; then TARGET_DIR="/workspace"; fi`,
               `cd "$TARGET_DIR"`,
               `echo "Starting app from: $TARGET_DIR"`,
-              `if command -v bun >/dev/null 2>&1 && [ -f package.json ]; then bun install || true; bun run dev --host 0.0.0.0 --port ${previewContainerPort} || bun run start -- --host 0.0.0.0 --port ${previewContainerPort} || busybox httpd -f -p ${previewContainerPort} -h "$TARGET_DIR"; elif [ -f package.json ]; then npm install || true; npm run dev -- --hostname 0.0.0.0 --port ${previewContainerPort} || npm run start -- --hostname 0.0.0.0 --port ${previewContainerPort} || busybox httpd -f -p ${previewContainerPort} -h "$TARGET_DIR"; else busybox httpd -f -p ${previewContainerPort} -h "$TARGET_DIR"; fi`,
+              `if command -v bun >/dev/null 2>&1 && [ -f package.json ]; then bun install || true; bun run dev --host 0.0.0.0 --port ${previewContainerPort} || bun run start -- --host 0.0.0.0 --port ${previewContainerPort} || bunx --yes serve . --listen ${previewContainerPort}; elif [ -f package.json ]; then npm install || true; npm run dev -- --hostname 0.0.0.0 --port ${previewContainerPort} || npm run start -- --hostname 0.0.0.0 --port ${previewContainerPort} || npx --yes serve . -l ${previewContainerPort}; elif command -v python3 >/dev/null 2>&1; then python3 -m http.server ${previewContainerPort} --bind 0.0.0.0; elif command -v python >/dev/null 2>&1; then python -m http.server ${previewContainerPort} --bind 0.0.0.0; else sh -c 'echo \"No runtime found to serve files\"; tail -f /dev/null'; fi`,
             ].join("; ");
             const retryRunCommand = `docker run -d --name ${escapeShellArg(containerName)} -e CI=1 -e NEXT_TELEMETRY_DISABLED=1 ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort}${retryLegacyPortArg} --entrypoint sh ${escapeShellArg(imageName)} -lc ${escapeShellArg(bootstrapCommand)}`;
             controller.enqueue(eventChunk("command", { line: retryRunLine }));
@@ -613,20 +655,21 @@ export async function GET(request: Request) {
 
             controller.enqueue(
               eventChunk("log", {
-                line: `> Waiting for app readiness on localhost:${previewHostPort} (up to 120s)...`,
+                line: `> Waiting for app readiness on localhost:${previewHostPort} (up to 75s)...`,
               })
             );
 
-            ready = await waitForHttpReady(previewHostPort, 120000);
-            if (!ready) {
-              const running = await isContainerRunning(containerName);
-              if (!running) {
-                controller.enqueue(
-                  eventChunk("log", {
-                    line: `! Container ${containerName} exited before becoming ready`,
-                  })
-                );
-              }
+            ({ ready, exitedEarly } = await waitForHttpReadyOrExit(
+              previewHostPort,
+              launchedContainerId ?? containerName,
+              75000
+            ));
+            if (!ready && exitedEarly) {
+              controller.enqueue(
+                eventChunk("log", {
+                  line: `! Container ${containerName} exited before becoming ready`,
+                })
+              );
             }
             if (!ready) {
               controller.enqueue(
