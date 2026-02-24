@@ -408,7 +408,7 @@ export async function GET(request: Request) {
           });
           runCommands.push({
             line: `$ docker rm -f ${containerName} || true`,
-            command: `docker rm -f ${escapeShellArg(containerName)} || true`,
+            command: `docker rm -f ${escapeShellArg(containerName)} >/dev/null 2>&1 || true`,
           });
         } else if (composeFilePath) {
           const composeContents = await readFile(composeFilePath, "utf8");
@@ -466,7 +466,7 @@ export async function GET(request: Request) {
             );
 
             await runCommand(
-              `docker rm -f ${escapeShellArg(containerName)} || true`,
+              `docker rm -f ${escapeShellArg(containerName)} >/dev/null 2>&1 || true`,
               undefined,
               (line) => {
                 controller.enqueue(eventChunk("log", { line }));
@@ -487,11 +487,28 @@ export async function GET(request: Request) {
                 controller.enqueue(eventChunk("log", { line }));
               }
             );
+            controller.enqueue(
+              eventChunk("log", {
+                line: `> Using auto-assigned host port ${previewHostPort}`,
+              })
+            );
           }
         }
 
         const ready = await waitForHttpReady(previewHostPort, 45000);
         if (!ready) {
+          controller.enqueue(
+            eventChunk("log", {
+              line: `! HTTP did not become ready on localhost:${previewHostPort} within timeout`,
+            })
+          );
+          await runCommand(
+            `docker logs --tail 80 ${escapeShellArg(containerName)} || true`,
+            undefined,
+            (line) => {
+              controller.enqueue(eventChunk("log", { line }));
+            }
+          );
           throw new Error(
             `Container started but did not serve HTTP on localhost:${previewHostPort} within 45 seconds`
           );
