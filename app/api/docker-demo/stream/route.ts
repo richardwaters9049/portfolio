@@ -699,15 +699,9 @@ export async function GET(request: Request) {
               `if ! command -v bun >/dev/null 2>&1; then if [ -x /root/.bun/bin/bun ]; then ln -sf /root/.bun/bin/bun /usr/local/bin/bun || true; fi; fi`,
               `if ! command -v bun >/dev/null 2>&1; then curl -fsSL https://bun.sh/install | bash || true; export PATH="$PATH:/root/.bun/bin:/home/root/.bun/bin"; fi`,
               `PROJECT_NAME=${defaultProjectName}`,
+              `echo "DEBUG: PROJECT_NAME is set to: $PROJECT_NAME"`,
               `# Run docker_pyNext_v3 to create project structure, but skip docker-compose part`,
-              `if command -v docker_pyNext_v3 >/dev/null 2>&1; then 
-                docker_pyNext_v3 "$PROJECT_NAME" || true;
-                # Remove docker-compose.yml since we can't run docker inside docker
-                if [ -f "/workspace/$PROJECT_NAME/docker-compose.yml" ]; then 
-                  rm -f "/workspace/$PROJECT_NAME/docker-compose.yml";
-                  echo "Removed docker-compose.yml (not supported in container)";
-                fi;
-              else /usr/local/bin/docker_pyNext_v3 "$PROJECT_NAME" || true; fi`,
+              `if command -v docker_pyNext_v3 >/dev/null 2>&1; then docker_pyNext_v3 "$PROJECT_NAME" && (if [ -f "/workspace/$PROJECT_NAME/docker-compose.yml" ]; then rm -f "/workspace/$PROJECT_NAME/docker-compose.yml" && echo "Removed docker-compose.yml (not supported in container)"; fi) || true; else /usr/local/bin/docker_pyNext_v3 "$PROJECT_NAME" || true; fi`,
               `TARGET_DIR=""`,
               `if [ -d "/workspace/$PROJECT_NAME" ]; then TARGET_DIR="/workspace/$PROJECT_NAME"; fi`,
               `if [ -z "$TARGET_DIR" ]; then TARGET_DIR="$(find /workspace -maxdepth 5 -type d -name "$PROJECT_NAME" | head -n 1)"; fi`,
@@ -716,8 +710,8 @@ export async function GET(request: Request) {
               `cd "$TARGET_DIR"`,
               `echo "Starting app from: $TARGET_DIR"`,
               `# Check for frontend directory first (docker_pyNext_v3 creates this structure)`,
-              `if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then cd frontend && echo "Found frontend directory, switching to frontend"; fi`,
-              `if command -v bun >/dev/null 2>&1 && [ -f package.json ]; then bun install || true; bun run dev --host 0.0.0.0 --port ${previewContainerPort} || bun run start -- --host 0.0.0.0 --port ${previewContainerPort} || bunx --yes serve . --listen ${previewContainerPort}; elif [ -f package.json ]; then npm install || true; npm run dev -- --hostname 0.0.0.0 --port ${previewContainerPort} || npm run start -- --hostname 0.0.0.0 --port ${previewContainerPort} || npx --yes serve . -l ${previewContainerPort}; elif command -v python3 >/dev/null 2>&1; then python3 -m http.server ${previewContainerPort} --bind 0.0.0.0; elif command -v python >/dev/null 2>&1; then python -m http.server ${previewContainerPort} --bind 0.0.0.0; else sh -c 'echo \"No runtime found to serve files\"; tail -f /dev/null'; fi`,
+              `if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then cd frontend && echo "Found frontend directory, switching to frontend" && echo "PORT=${previewContainerPort}" > .env; fi`,
+              `if command -v bun >/dev/null 2>&1 && [ -f package.json ]; then bun install || true; PORT=${previewContainerPort} bun run dev --host 0.0.0.0 --port ${previewContainerPort} || PORT=${previewContainerPort} bun run start -- --host 0.0.0.0 --port ${previewContainerPort} || PORT=${previewContainerPort} bunx --yes serve . --listen ${previewContainerPort}; elif [ -f package.json ]; then npm install || true; PORT=${previewContainerPort} npm run dev -- --hostname 0.0.0.0 --port ${previewContainerPort} || PORT=${previewContainerPort} npm run start -- --hostname 0.0.0.0 --port ${previewContainerPort} || PORT=${previewContainerPort} npx --yes serve . -l ${previewContainerPort}; elif command -v python3 >/dev/null 2>&1; then python3 -m http.server ${previewContainerPort} --bind 0.0.0.0; elif command -v python >/dev/null/2>&1; then python -m http.server ${previewContainerPort} --bind 0.0.0.0; else sh -c 'echo \"No runtime found to serve files\"; tail -f /dev/null'; fi`,
             ].join("; ");
             const retryRunCommand = `docker run -d --name ${escapeShellArg(containerName)} -e CI=1 -e NEXT_TELEMETRY_DISABLED=1 ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort}${retryLegacyPortArg} --entrypoint sh ${escapeShellArg(imageName)} -lc ${escapeShellArg(bootstrapCommand)}`;
             controller.enqueue(eventChunk("command", { line: retryRunLine }));
