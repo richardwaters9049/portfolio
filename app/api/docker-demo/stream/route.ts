@@ -701,16 +701,33 @@ export async function GET(request: Request) {
               `PROJECT_NAME=${defaultProjectName}`,
               `echo "DEBUG: PROJECT_NAME is set to: $PROJECT_NAME"`,
               `# Run docker_pyNext_v3 to create project structure, but skip docker-compose part`,
-              `if command -v docker_pyNext_v3 >/dev/null 2>&1; then docker_pyNext_v3 "$PROJECT_NAME" && (if [ -f "/workspace/$PROJECT_NAME/docker-compose.yml" ]; then rm -f "/workspace/$PROJECT_NAME/docker-compose.yml" && echo "Removed docker-compose.yml (not supported in container)"; fi) || true; else /usr/local/bin/docker_pyNext_v3 "$PROJECT_NAME" || true; fi`,
+              `if command -v docker_pyNext_v3 >/dev/null 2>&1; then 
+                echo "Running docker_pyNext_v3 with project: $PROJECT_NAME"
+                docker_pyNext_v3 "$PROJECT_NAME" || echo "docker_pyNext_v3 failed, but continuing..."
+                if [ -f "/workspace/$PROJECT_NAME/docker-compose.yml" ]; then 
+                  rm -f "/workspace/$PROJECT_NAME/docker-compose.yml" && echo "Removed docker-compose.yml (not supported in container)"; 
+                fi
+              else 
+                echo "docker_pyNext_v3 command not found, trying /usr/local/bin/docker_pyNext_v3"
+                /usr/local/bin/docker_pyNext_v3 "$PROJECT_NAME" || echo "docker_pyNext_v3 failed, but continuing..."
+              fi`,
               `TARGET_DIR=""`,
-              `if [ -d "/workspace/$PROJECT_NAME" ]; then TARGET_DIR="/workspace/$PROJECT_NAME"; fi`,
-              `if [ -z "$TARGET_DIR" ]; then TARGET_DIR="$(find /workspace -maxdepth 5 -type d -name "$PROJECT_NAME" | head -n 1)"; fi`,
-              `if [ -z "$TARGET_DIR" ]; then PKG_FILE="$(find /workspace -maxdepth 5 -type f -name package.json | head -n 1)"; if [ -n "$PKG_FILE" ]; then TARGET_DIR="$(dirname "$PKG_FILE")"; fi; fi`,
-              `if [ -z "$TARGET_DIR" ]; then TARGET_DIR="/workspace"; fi`,
+              `echo "DEBUG: Looking for project directory: /workspace/$PROJECT_NAME"`,
+              `if [ -d "/workspace/$PROJECT_NAME" ]; then TARGET_DIR="/workspace/$PROJECT_NAME" && echo "DEBUG: Found project directory: $TARGET_DIR"; fi`,
+              `if [ -z "$TARGET_DIR" ]; then TARGET_DIR="$(find /workspace -maxdepth 5 -type d -name "$PROJECT_NAME" | head -n 1)" && echo "DEBUG: Found project via find: $TARGET_DIR"; fi`,
+              `if [ -z "$TARGET_DIR" ]; then PKG_FILE="$(find /workspace -maxdepth 5 -type f -name package.json | head -n 1)"; if [ -n "$PKG_FILE" ]; then TARGET_DIR="$(dirname "$PKG_FILE")" && echo "DEBUG: Found package.json at: $PKG_FILE, using dir: $TARGET_DIR"; fi; fi`,
+              `if [ -z "$TARGET_DIR" ]; then TARGET_DIR="/workspace" && echo "DEBUG: Using workspace as fallback"; fi`,
               `cd "$TARGET_DIR"`,
-              `echo "Starting app from: $TARGET_DIR"`,
+              `echo "DEBUG: Current directory: $(pwd)"`,
+              `echo "DEBUG: Directory contents:" && ls -la`,
               `# Check for frontend directory first (docker_pyNext_v3 creates this structure)`,
-              `if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then cd frontend && echo "Found frontend directory, switching to frontend" && echo "PORT=${previewContainerPort}" > .env; fi`,
+              `echo "DEBUG: Checking for frontend directory..."`,
+              `if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then 
+                cd frontend && echo "DEBUG: Switched to frontend directory: $(pwd)" && echo "PORT=${previewContainerPort}" > .env && echo "DEBUG: Created .env with PORT=${previewContainerPort}" && cat .env;
+              else 
+                echo "DEBUG: No frontend directory found, checking current directory for package.json";
+                if [ -f "package.json" ]; then echo "DEBUG: Found package.json in current directory"; else echo "DEBUG: No package.json found anywhere"; fi;
+              fi`,
               `if command -v bun >/dev/null 2>&1 && [ -f package.json ]; then bun install || true; PORT=${previewContainerPort} bun run dev --host 0.0.0.0 --port ${previewContainerPort} || PORT=${previewContainerPort} bun run start -- --host 0.0.0.0 --port ${previewContainerPort} || PORT=${previewContainerPort} bunx --yes serve . --listen ${previewContainerPort}; elif [ -f package.json ]; then npm install || true; PORT=${previewContainerPort} npm run dev -- --hostname 0.0.0.0 --port ${previewContainerPort} || PORT=${previewContainerPort} npm run start -- --hostname 0.0.0.0 --port ${previewContainerPort} || PORT=${previewContainerPort} npx --yes serve . -l ${previewContainerPort}; elif command -v python3 >/dev/null 2>&1; then python3 -m http.server ${previewContainerPort} --bind 0.0.0.0; elif command -v python >/dev/null/2>&1; then python -m http.server ${previewContainerPort} --bind 0.0.0.0; else sh -c 'echo \"No runtime found to serve files\"; tail -f /dev/null'; fi`,
             ].join("; ");
             const retryRunCommand = `docker run -d --name ${escapeShellArg(containerName)} -e CI=1 -e NEXT_TELEMETRY_DISABLED=1 ${workspaceMountArg} -p 127.0.0.1::${previewContainerPort}${retryLegacyPortArg} --entrypoint sh ${escapeShellArg(imageName)} -lc ${escapeShellArg(bootstrapCommand)}`;
