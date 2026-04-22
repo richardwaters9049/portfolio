@@ -1,60 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
 import gsap from "gsap";
 import DockerDemoWindow from "@/components/ui/docker-demo-window";
-
-type Project = {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  github: string;
-  demo: string;
-  demoMode?: "external" | "terminal";
-};
-
-const projects: Project[] = [
-  {
-    id: "01",
-    title: "Password Cracker",
-    description:
-      "GPU-accelerated password cracking system built for security research, benchmarking, and threat modelling.",
-    image: "/images/pw-crack-img.png",
-    github: "https://github.com/yourname/password-cracker",
-    demo: "https://password-cracker.onrender.com/",
-  },
-  {
-    id: "02",
-    title: "LukaScope",
-    description:
-      "AI-driven system for early leukaemia detection, leveraging longitudinal medical data and predictive modelling.",
-    image: "/images/lukascope.png",
-    github: "https://github.com/yourname/lukascope",
-    demo: "https://demo-link.com",
-  },
-  {
-    id: "03",
-    title: "Arc and Chrome YouTube Speed Extension",
-    description: "Adjust speed and volume of YouTube including custom values.",
-    image: "/images/pw-crack-img.png",
-    github: "https://github.com/richardwaters9049/YouTube_Extension.git",
-    demo: "https://demo-link.com",
-  },
-  {
-    id: "04",
-    title: "Docker Script",
-    description:
-      "Dockerized Python + Next.js script runner for repeatable local dev and testing workflows.",
-    image: "/images/IT.png",
-    github: "https://github.com/richardwaters9049/DockerScripts.git",
-    demo: "docker-script-terminal",
-    demoMode: "terminal",
-  },
-];
+import ProjectCard from "@/app/projects/project-card";
+import { projects } from "@/app/projects/projects-data";
 
 export default function Projects() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -155,59 +107,12 @@ export default function Projects() {
       {/* Grid */}
       <div className="grid gap-12 max-w-6xl mx-auto">
         {projects.map((project) => (
-          <div
+          <ProjectCard
             key={project.id}
-            ref={addToRefs}
-            className="grid md:grid-cols-2 gap-10 items-center p-10 rounded-xl border border-black/10 bg-white/30 backdrop-blur-sm"
-          >
-            {/* Text */}
-            <div className="flex flex-col gap-6 max-[765px]:text-center">
-              <h2 className="font-bitter text-3xl tracking-wider underline underline-offset-4">
-                {project.title}
-              </h2>
-
-              <p className="font-bitter text-lg tracking-wider text-gray-800">
-                {project.description}
-              </p>
-
-              <div className="flex gap-6 font-bitter max-[765px]:justify-center">
-                <Link
-                  href={project.github}
-                  target="_blank"
-                  className="underline underline-offset-4 hover:opacity-70 transition"
-                >
-                  GitHub
-                </Link>
-                {project.demoMode === "terminal" ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsDockerDemoOpen(true)}
-                    className="underline underline-offset-4 hover:opacity-70 transition"
-                  >
-                    Demo
-                  </button>
-                ) : (
-                  <Link
-                    href={project.demo}
-                    target="_blank"
-                    className="underline underline-offset-4 hover:opacity-70 transition"
-                  >
-                    Demo
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            {/* Image */}
-            <div className="relative rounded-lg overflow-hidden">
-              <Image
-                src={project.image}
-                alt={project.title}
-                fill
-                className="object-cover transition-transform duration-500 hover:scale-105"
-              />
-            </div>
-          </div>
+            project={project}
+            cardRef={addToRefs}
+            onOpenTerminalDemo={() => setIsDockerDemoOpen(true)}
+          />
         ))}
       </div>
 
