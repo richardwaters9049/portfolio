@@ -33,18 +33,47 @@ export default function DockerDemoWindow({
       return "DockerScripts";
     }
   })();
-  const imageName = repoName.toLowerCase().replace(/[^a-z0-9._-]/g, "-");
+  const projectName = "demo-fullstack-lab";
   const scriptPreview = [
-    `# ${repoName}`,
+    `# docker-nextpy — FULLSTACK LAB v14.1`,
     "",
-    `$ git clone ${repoUrl}`,
-    `$ cd ${repoName}`,
-    `$ docker build -t ${imageName} .`,
-    `$ docker run --rm -it -p <HOST_PORT>:8080 ${imageName}`,
+    `$ docker_pyNext_v3 ${projectName}`,
     "",
-    "> Booting containers...",
-    "> Installing dependencies...",
-    "> Starting app on http://localhost:<HOST_PORT>",
+    "╔════════════════════════════════════════════════╗",
+    "║ 🚀 docker-nextpy — FULLSTACK LAB v14.1         ║",
+    "║ 🐳 Bun + FastAPI + Prisma + PG + Users Table    ║",
+    "╚════════════════════════════════════════════════╝",
+    "",
+    "> Creating backend/ and frontend/ workspaces...",
+    "> Writing FastAPI, Prisma schema, tests, and .env files...",
+    "> Generating a Next.js app with Bun + Tailwind...",
+    "> Installing frontend dependencies and motion tooling...",
+    "> Writing docker-compose.yml for db, backend, and frontend...",
+    "> Launching Postgres, backend API, and Next.js frontend...",
+    "> Waiting for database health and backend connectivity...",
+    "> Project will be live once the generated app finishes booting",
+  ];
+  const buildStages = [
+    {
+      title: "Scaffold Project",
+      detail: "Create backend, frontend, hooks, tests, and Prisma folders.",
+    },
+    {
+      title: "Wire Backend",
+      detail: "Write FastAPI app, Prisma schema, seed data, tests, and .env.",
+    },
+    {
+      title: "Generate Frontend",
+      detail: "Create a Bun-powered Next.js app and install UI dependencies.",
+    },
+    {
+      title: "Compose Stack",
+      detail: "Generate docker-compose services for db, backend, and frontend.",
+    },
+    {
+      title: "Verify Runtime",
+      detail: "Wait for Postgres, check backend connectivity, and reveal the app.",
+    },
   ];
 
   const appendLine = useCallback((line: string) => {
@@ -188,7 +217,7 @@ export default function DockerDemoWindow({
           transition={{ duration: 0.22, ease: "easeOut" }}
         >
           <motion.div
-            className="w-full max-w-3xl overflow-hidden rounded-xl border border-emerald-500/40 bg-[#101510] shadow-[0_0_30px_rgba(16,185,129,0.22)]"
+            className="w-full max-w-6xl overflow-hidden rounded-xl border border-emerald-500/40 bg-[#101510] shadow-[0_0_30px_rgba(16,185,129,0.22)]"
             onClick={(event) => event.stopPropagation()}
             initial={{ opacity: 0, y: 28, scale: 0.96, rotateX: -7 }}
             animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
@@ -217,7 +246,7 @@ export default function DockerDemoWindow({
               {isTerminalVisible ? (
                 <div
                   ref={terminalRef}
-                  className="max-h-[60vh] overflow-auto rounded-md border border-emerald-500/25 bg-[#0a0d0a] p-4 font-mono text-sm leading-7 text-emerald-300"
+                  className="max-h-[46vh] overflow-auto rounded-md border border-emerald-500/25 bg-[#0a0d0a] p-4 font-mono text-sm leading-7 text-emerald-300"
                 >
                   {(renderedLines.length ? renderedLines : scriptPreview).map((line, index) => (
                     <p key={index} className="whitespace-pre-wrap break-words">
@@ -276,7 +305,82 @@ export default function DockerDemoWindow({
                     className={`w-full bg-white ${isTerminalVisible ? "h-[420px]" : "h-[70vh]"}`}
                   />
                 </div>
-              ) : null}
+              ) : (
+                <div className="overflow-hidden rounded-md border border-emerald-500/25 bg-black">
+                  <div className="border-b border-emerald-500/25 bg-[#0d130d] px-3 py-2 font-mono text-xs text-emerald-200/90">
+                    docker_pyNext_v3 Build Sequence
+                  </div>
+                  <div className="relative h-[320px] overflow-hidden bg-[#050805] xl:h-[300px]">
+                    <video
+                      src="/animations/jason-hack.mp4"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="absolute inset-0 h-full w-full object-cover opacity-45"
+                    />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.14),transparent_42%),linear-gradient(180deg,rgba(2,6,3,0.18),rgba(2,6,3,0.88))]" />
+                    <div className="relative z-10 grid h-full gap-4 px-5 py-5 lg:grid-cols-[1.15fr_0.85fr]">
+                      <div className="flex flex-col justify-between rounded-2xl border border-emerald-500/20 bg-[#071108]/75 p-4 backdrop-blur-md">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-300" />
+                            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400 [animation-delay:180ms]" />
+                            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500 [animation-delay:360ms]" />
+                          </div>
+                          <div className="space-y-2">
+                            <p className="font-mono text-sm uppercase tracking-[0.24em] text-emerald-200">
+                              App Builder Sequence
+                            </p>
+                            <p className="max-w-xl font-mono text-xs leading-6 text-emerald-100/85">
+                              This demo mirrors the real `docker_pyNext_v3` flow: scaffold a
+                              full-stack project, write backend and frontend files, compose the
+                              stack, then reveal the generated app only when it is ready.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-emerald-500/20 bg-black/35 p-3">
+                          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-emerald-200/75">
+                            Active Command
+                          </p>
+                          <p className="mt-2 font-mono text-xs leading-6 text-emerald-100">
+                            `$ docker_pyNext_v3 {projectName}`
+                          </p>
+                          <div className="mt-3 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-emerald-200/90">
+                            {isRunning
+                              ? "Generating backend, frontend, compose stack, and database wiring"
+                              : "Ready to run the builder again"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid content-center gap-2.5">
+                        {buildStages.map((stage, index) => (
+                          <div
+                            key={stage.title}
+                            className="rounded-2xl border border-emerald-500/18 bg-[#09140a]/78 px-3 py-2.5 backdrop-blur-sm"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-emerald-400/35 bg-emerald-500/10 font-mono text-[11px] text-emerald-200">
+                                {`0${index + 1}`}
+                              </span>
+                              <div className="space-y-1">
+                                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-emerald-100">
+                                  {stage.title}
+                                </p>
+                                <p className="font-mono text-[11px] leading-5 text-emerald-100/72">
+                                  {stage.detail}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         </motion.div>
