@@ -5,7 +5,7 @@ export type Project = {
   image: string;
   github: string;
   demo: string;
-  demoMode?: "external" | "terminal";
+  demoMode?: "external" | "terminal" | "animated";
 };
 
 export const projects: Project[] = [
@@ -17,6 +17,7 @@ export const projects: Project[] = [
     image: "/images/pw-crack-img.png",
     github: "https://github.com/yourname/password-cracker",
     demo: "https://password-cracker.onrender.com/",
+    demoMode: "animated",
   },
   {
     id: "02",
@@ -31,7 +32,7 @@ export const projects: Project[] = [
     id: "03",
     title: "Arc and Chrome YouTube Speed Extension",
     description: "Adjust speed and volume of YouTube including custom values.",
-    image: "/images/pw-crack-img.png",
+    image: "/images/yt-screen.png",
     github: "https://github.com/richardwaters9049/YouTube_Extension.git",
     demo: "https://demo-link.com",
   },

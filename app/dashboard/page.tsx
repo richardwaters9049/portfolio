@@ -178,8 +178,7 @@ const Page: React.FC = () => {
                                 </button>
 
                                 <Link
-                                    href="/animations/files/RW-CV-Oct25.pdf"
-                                    download
+                                    href="https://raw.githubusercontent.com/richardwaters9049/CV/master/CV_Examples/AprilCV.pdf"
                                     target="_blank"
                                     className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
                                 >

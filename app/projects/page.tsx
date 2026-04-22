@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
 import gsap from "gsap";
+import AnimatedDemoWindow from "@/components/ui/animated-demo-window";
 import DockerDemoWindow from "@/components/ui/docker-demo-window";
-import ProjectCard from "@/app/projects/project-card";
-import { projects } from "@/app/projects/projects-data";
+import ProjectCard from "../../app/projects/project-card";
+import type { Project } from "../../app/projects/projects-data";
+import { projects } from "../../app/projects/projects-data";
 
 export default function Projects() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -14,6 +16,9 @@ export default function Projects() {
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const cardsRef = useRef<Array<HTMLDivElement | null>>([]);
   const [isDockerDemoOpen, setIsDockerDemoOpen] = useState(false);
+  const [animatedDemoProject, setAnimatedDemoProject] = useState<Project | null>(
+    null,
+  );
   const dockerProject = projects.find(
     (project) => project.demoMode === "terminal",
   );
@@ -69,6 +74,17 @@ export default function Projects() {
     }
   };
 
+  const handleOpenProjectDemo = (project: Project) => {
+    if (project.demoMode === "terminal") {
+      setIsDockerDemoOpen(true);
+      return;
+    }
+
+    if (project.demoMode === "animated") {
+      setAnimatedDemoProject(project);
+    }
+  };
+
   return (
     <section
       ref={sectionRef}
@@ -111,10 +127,17 @@ export default function Projects() {
             key={project.id}
             project={project}
             cardRef={addToRefs}
-            onOpenTerminalDemo={() => setIsDockerDemoOpen(true)}
+            onOpenProjectDemo={handleOpenProjectDemo}
           />
         ))}
       </div>
+
+      <AnimatedDemoWindow
+        isOpen={Boolean(animatedDemoProject)}
+        onClose={() => setAnimatedDemoProject(null)}
+        title={animatedDemoProject?.title ?? "Project Demo"}
+        demoUrl={animatedDemoProject?.demo ?? "https://password-cracker.onrender.com/"}
+      />
 
       <DockerDemoWindow
         isOpen={isDockerDemoOpen}
