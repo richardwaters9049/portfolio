@@ -21,9 +21,19 @@ function safeRepoNameFromRepoUrl(repoUrl: string) {
   return repoName.replace(/[^a-zA-Z0-9._-]/g, "") || "DockerScripts";
 }
 
+const WORKSPACE_ROOT = path.resolve("/tmp/docker-demo-workspace");
+
+function resolveWorkspacePathOrNull(targetPath: string) {
+  const resolved = path.resolve(targetPath);
+  const rootWithSep = WORKSPACE_ROOT.endsWith(path.sep)
+    ? WORKSPACE_ROOT
+    : `${WORKSPACE_ROOT}${path.sep}`;
+  return resolved === WORKSPACE_ROOT || resolved.startsWith(rootWithSep) ? resolved : null;
+}
+
 function repoDirFromRepoUrl(repoUrl: string) {
   const safeRepo = safeRepoNameFromRepoUrl(repoUrl);
-  return path.join("/tmp/docker-demo-workspace", safeRepo);
+  return path.join(WORKSPACE_ROOT, safeRepo);
 }
 
 const SKIP_DIRS = new Set([".git", "node_modules", ".next", "dist", "build"]);
@@ -37,11 +47,14 @@ const COMPOSE_FILE_NAMES = [
 async function findComposeFile(repoDir: string, depth = 0): Promise<string | null> {
   if (depth > 5) return null;
 
-  const entries = await readdir(repoDir, { withFileTypes: true });
+  const safeRepoDir = resolveWorkspacePathOrNull(repoDir);
+  if (!safeRepoDir) return null;
+
+  const entries = await readdir(safeRepoDir, { withFileTypes: true });
   for (const filename of COMPOSE_FILE_NAMES) {
     const composeFile = entries.find((entry) => entry.isFile() && entry.name === filename);
     if (composeFile) {
-      return path.join(repoDir, composeFile.name);
+      return path.join(safeRepoDir, composeFile.name);
     }
   }
 
@@ -49,8 +62,10 @@ async function findComposeFile(repoDir: string, depth = 0): Promise<string | nul
     if (!entry.isDirectory()) continue;
     if (SKIP_DIRS.has(entry.name)) continue;
 
-    const nestedPath = path.join(repoDir, entry.name);
-    const nestedCompose = await findComposeFile(nestedPath, depth + 1);
+    const nestedPath = path.join(safeRepoDir, entry.name);
+    const safeNestedPath = resolveWorkspacePathOrNull(nestedPath);
+    if (!safeNestedPath) continue;
+    const nestedCompose = await findComposeFile(safeNestedPath, depth + 1);
     if (nestedCompose) return nestedCompose;
   }
 
@@ -106,7 +121,12 @@ export async function POST(request: Request) {
     }
 
     await runStop(`docker rm -f ${escapeShellArg(containerName)} || true`);
-    const repoDir = sessionRepoDir ?? repoDirFromRepoUrl(repoUrl);
+    const repoDirCandidate = sessionRepoDir ?? repoDirFromRepoUrl(repoUrl);
+    const repoDir = resolveWorkspacePathOrNull(repoDirCandidate);
+    if (!repoDir) {
+      return Response.json({ ok: false, message: "Invalid repository path" }, { status: 400 });
+    }
+
     const composeFilePath =
       sessionComposeFilePath ?? (await findComposeFile(repoDir).catch(() => null));
     if (composeFilePath) {
