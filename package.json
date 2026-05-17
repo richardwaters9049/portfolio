@@ -28,7 +28,7 @@
     "lottie-web": "^5.13.0",
     "lucide-react": "^0.562.0",
     "motion": "^12.23.26",
-    "next": "14.2.5",
+    "next": "15.5.18",
     "react": "^18",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.3.1",
