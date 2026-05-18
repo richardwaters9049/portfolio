@@ -1,11 +1,9 @@
 import { getDockerDemoSession } from "@/lib/docker-demo-store";
 
-type RouteParams = {
-  sessionId: string;
-  path?: string[];
-};
-
-async function proxyRequest(request: Request, params: RouteParams) {
+async function proxyRequest(
+  request: Request,
+  params: { sessionId: string; path?: string[] },
+) {
   const session = getDockerDemoSession(params.sessionId);
   if (!session) {
     return new Response("Preview session not found", { status: 404 });
@@ -44,26 +42,44 @@ async function proxyRequest(request: Request, params: RouteParams) {
   });
 }
 
-export async function GET(request: Request, { params }: { params: RouteParams }) {
-  return proxyRequest(request, params);
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ sessionId: string; path?: string[] }> },
+) {
+  return proxyRequest(request, await params);
 }
 
-export async function POST(request: Request, { params }: { params: RouteParams }) {
-  return proxyRequest(request, params);
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ sessionId: string; path?: string[] }> },
+) {
+  return proxyRequest(request, await params);
 }
 
-export async function PUT(request: Request, { params }: { params: RouteParams }) {
-  return proxyRequest(request, params);
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ sessionId: string; path?: string[] }> },
+) {
+  return proxyRequest(request, await params);
 }
 
-export async function PATCH(request: Request, { params }: { params: RouteParams }) {
-  return proxyRequest(request, params);
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ sessionId: string; path?: string[] }> },
+) {
+  return proxyRequest(request, await params);
 }
 
-export async function DELETE(request: Request, { params }: { params: RouteParams }) {
-  return proxyRequest(request, params);
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ sessionId: string; path?: string[] }> },
+) {
+  return proxyRequest(request, await params);
 }
 
-export async function OPTIONS(request: Request, { params }: { params: RouteParams }) {
-  return proxyRequest(request, params);
+export async function OPTIONS(
+  request: Request,
+  { params }: { params: Promise<{ sessionId: string; path?: string[] }> },
+) {
+  return proxyRequest(request, await params);
 }
