@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Nav from "@/components/ui/nav";
 import Image from "next/image";
@@ -38,7 +40,7 @@ const HackingPage: React.FC = () => {
     return (
         <main>
             <Nav />
-            <div className="min-h-screen text-black p-6 text-center">
+            <div className="min-h-screen text-foreground p-6 text-center bg-background transition-colors duration-300">
                 <h1 className="text-9xl sm:text-center lg:text-left mb-8 font-angel tracking-wider p-4">Projects</h1>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
@@ -58,8 +60,8 @@ const HackingPage: React.FC = () => {
                                     style={{ width: '100%', height: 'auto' }}
                                 />
                             </div>
-                            <h2 className="text-xl font-bold mb-2 text-white">{project.title}</h2>
-                            <p className="text-gray-400 mb-4">{project.description}</p>
+                            <h2 className="text-xl font-bold mb-2 text-white dark:text-white">{project.title}</h2>
+                            <p className="text-gray-400 dark:text-gray-400 mb-4">{project.description}</p>
 
                             <div className="flex justify-between">
                                 <a
