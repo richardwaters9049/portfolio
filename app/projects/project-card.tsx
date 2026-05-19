@@ -163,14 +163,14 @@ export default function ProjectCard({
   return (
     <div
       ref={cardRef}
-      className="grid items-center gap-10 rounded-[1.75rem] border border-black/10 bg-white/30 p-12 backdrop-blur-sm md:grid-cols-[1.05fr_0.95fr]"
+      className="grid items-center gap-10 rounded-[1.75rem] border border-black/10 dark:border-white/10 bg-white/30 dark:bg-white/5 p-12 backdrop-blur-sm md:grid-cols-[1.05fr_0.95fr]"
     >
       <div className="flex flex-col gap-6 max-[765px]:text-center">
         <h2 className="font-bitter text-3xl tracking-wider underline underline-offset-4">
           {project.title}
         </h2>
 
-        <p className="font-bitter text-lg tracking-wider text-gray-800">
+        <p className="font-bitter text-lg tracking-wider text-gray-800 dark:text-gray-300">
           {project.description}
         </p>
 
@@ -214,7 +214,7 @@ export default function ProjectCard({
         <button
           type="button"
           onClick={() => onOpenProjectDemo(project)}
-          className="group relative flex h-[270px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-transform duration-300 hover:-translate-y-0.5"
+          className="group relative flex h-[270px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 dark:border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-transform duration-300 hover:-translate-y-0.5"
         >
           {imagePanel}
         </button>
@@ -222,7 +222,7 @@ export default function ProjectCard({
         <Link
           href={project.demo}
           target="_blank"
-          className="group relative flex h-[270px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-transform duration-300 hover:-translate-y-0.5"
+          className="group relative flex h-[270px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 dark:border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-transform duration-300 hover:-translate-y-0.5"
         >
           {imagePanel}
         </Link>

@@ -9,6 +9,7 @@ import DockerDemoWindow from "@/components/ui/docker-demo-window";
 import ProjectCard from "../../app/projects/project-card";
 import type { Project } from "../../app/projects/projects-data";
 import { projects } from "../../app/projects/projects-data";
+import ThemeToggle from "@/components/ui/theme-toggle";
 
 export default function Projects() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -88,29 +89,32 @@ export default function Projects() {
   return (
     <section
       ref={sectionRef}
-      className="min-h-screen p-6 bg-gradient-to-bl from-orange-500 to-white"
+      className="min-h-screen p-6 bg-gradient-to-bl dark:from-orange-500 dark:to-gray-950 from-orange-400 to-white transition-colors duration-300"
     >
-      {/* Back */}
-      <Link
-        href="/dashboard"
-        className="text-2xl flex items-center gap-3 font-bitter tracking-wider mb-2"
-      >
-        <FaArrowLeft />
-        <span>Back</span>
-      </Link>
+      {/* Top bar */}
+      <div className="flex justify-between items-center mb-2">
+        <Link
+          href="/dashboard"
+          className="text-2xl flex items-center gap-3 font-bitter tracking-wider"
+        >
+          <FaArrowLeft />
+          <span>Back</span>
+        </Link>
+        <ThemeToggle />
+      </div>
 
       {/* Header */}
       <div className="w-full flex flex-col items-center mb-16">
         <h1
           ref={titleRef}
-          className="text-slate-100 font-angel drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] tracking-wider bg-clip-text text-transparent bg-gradient-to-b from-black to-gray-500 project-title"
+          className="font-angel drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] tracking-wider bg-clip-text text-transparent bg-gradient-to-b dark:from-white dark:to-gray-500 from-black to-gray-500 project-title"
         >
           Projects
         </h1>
 
         <p
           ref={subtitleRef}
-          className="text-xl text-gray-700 leading-relaxed font-bitter tracking-wider text-center max-w-3xl"
+          className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed font-bitter tracking-wider text-center max-w-3xl"
         >
           A curated selection of applied systems exploring artificial
           intelligence, cybersecurity, and real-world problem solving.

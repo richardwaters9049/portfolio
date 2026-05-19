@@ -9,6 +9,7 @@ import Link from "next/link";
 import { FaGithub, FaProjectDiagram, FaFilePdf } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import JasonVid from "@/components/jasonVid";
+import ThemeToggle from "@/components/ui/theme-toggle";
 
 const Page: React.FC = () => {
     const [copied, setCopied] = useState(false);
@@ -109,25 +110,28 @@ const Page: React.FC = () => {
 
             <main
                 ref={mainRef}
-                className="min-h-screen w-full bg-gradient-to-b from-gray-900 to-black text-slate-200"
+                className="min-h-screen w-full bg-background text-foreground transition-colors duration-300"
             >
+                <div className="flex justify-end p-4">
+                    <ThemeToggle />
+                </div>
                 <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-3 p-8 justify-items-center items-start">
                     {/* Text Content */}
                     <div className="bio p-6 flex flex-col gap-12">
                         <h2
                             ref={h2Ref}
-                            className="text-slate-100 font-angel text-8xl drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] tracking-wider bg-clip-text text-transparent bg-gradient-to-b from-teal-500 to-white first-letter:text-9xl first-letter:uppercase"
+                            className="font-angel text-8xl drop-shadow-[0_0_15px_rgba(0,255,255,0.25)] tracking-wider bg-clip-text text-transparent bg-gradient-to-b from-teal-500 dark:to-white to-gray-800 first-letter:text-9xl first-letter:uppercase"
                         >
                             Welcome
                         </h2>
 
-                        <p ref={addToRefs} className="text-slate-200 font-bitter text-xl tracking-wider leading-relaxed">
+                        <p ref={addToRefs} className="text-foreground font-bitter text-xl tracking-wider leading-relaxed">
                             Hello, I’m Richy.<br />
                             An AI / Cybersecurity Engineer based in Liverpool, UK.<br />
                             I build systems that think, defend, and evolve beyond human limits.
                         </p>
 
-                        <p ref={addToRefs} className="text-slate-300 font-bitter text-xl tracking-wider leading-relaxed">
+                        <p ref={addToRefs} className="text-muted-foreground font-bitter text-xl tracking-wider leading-relaxed">
                             With a First-Class Honours degree in Computer Science and over a
                             decade in software engineering, I’ve developed AI models that detect
                             leukaemia years before symptoms appear, created honeypots that trap
@@ -135,7 +139,7 @@ const Page: React.FC = () => {
                             platforms for major retail brands.
                         </p>
 
-                        <p ref={addToRefs} className="text-slate-300 font-bitter text-xl tracking-wider leading-relaxed">
+                        <p ref={addToRefs} className="text-muted-foreground font-bitter text-xl tracking-wider leading-relaxed">
                             I love blending creativity with computation — practical, ethical,
                             and sometimes a little fun. Feel free to reach out… unless
                             it’s about Java ☕ — that’s still terrifying. 💀
@@ -188,7 +192,7 @@ const Page: React.FC = () => {
                             </div>
 
                             <div ref={copyContainerRef} className="flex gap-6 items-center mt-6">
-                                <p className="text-slate-200 font-bitter tracking-widest text-lg">
+                                <p className="text-foreground font-bitter tracking-widest text-lg">
                                     <strong className="text-2xl">Email:</strong> richardwaters866@gmail.com
                                 </p>
                                 <CopyToClipboard
