@@ -114,7 +114,7 @@ export default function Projects() {
 
         <p
           ref={subtitleRef}
-          className="text-xl text-gray-700 leading-relaxed font-bitter tracking-wider text-center max-w-3xl"
+          className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed font-bitter tracking-wider text-center max-w-3xl"
         >
           A curated selection of applied systems exploring artificial
           intelligence, cybersecurity, and real-world problem solving.

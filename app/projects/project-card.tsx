@@ -214,7 +214,7 @@ export default function ProjectCard({
         <button
           type="button"
           onClick={() => onOpenProjectDemo(project)}
-          className="group relative flex h-[270px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-transform duration-300 hover:-translate-y-0.5"
+          className="group relative flex h-[270px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 dark:border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-transform duration-300 hover:-translate-y-0.5"
         >
           {imagePanel}
         </button>
@@ -222,7 +222,7 @@ export default function ProjectCard({
         <Link
           href={project.demo}
           target="_blank"
-          className="group relative flex h-[270px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-transform duration-300 hover:-translate-y-0.5"
+          className="group relative flex h-[270px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 dark:border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition-transform duration-300 hover:-translate-y-0.5"
         >
           {imagePanel}
         </Link>
