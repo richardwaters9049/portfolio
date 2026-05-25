@@ -116,7 +116,7 @@ const Home: React.FC = () => {
   return (
     <main
       ref={mainRef}
-      className="relative w-screen h-screen flex flex-col items-center justify-center bg-black text-slate-100 gap-12 text-center p-6 overflow-hidden"
+      className="relative w-screen h-screen flex flex-col items-center justify-center bg-black dark:bg-black text-slate-100 gap-12 text-center p-6 overflow-hidden"
     >
       {/* Bat */}
       <Lottie
