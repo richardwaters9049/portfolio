@@ -26,7 +26,7 @@ export const projects: Project[] = [
       "AI-driven system for early leukaemia detection, leveraging longitudinal medical data and predictive modelling.",
     image: "/images/lukascope.png",
     github: "https://github.com/yourname/lukascope",
-    demo: "https://demo-link.com",
+    demo: "https://luka-scope.vercel.app/",
   },
   {
     id: "03",
