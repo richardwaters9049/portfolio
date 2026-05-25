@@ -283,7 +283,7 @@ export default function AnimatedDemoWindow({
             {isMinimized ? (
               <div className="space-y-4 bg-[#050805] p-5">
                 <p className="font-mono text-sm uppercase tracking-[0.18em] text-emerald-200">
-                  Password Cracker is minimized
+                  {title} is minimized
                 </p>
                 <p className="font-mono text-sm leading-7 text-emerald-100/80">
                   Restore the window when you want to continue inside the app.
@@ -336,7 +336,7 @@ export default function AnimatedDemoWindow({
                         <div className="absolute inset-x-0 bottom-0 p-5">
                           <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4 backdrop-blur-sm">
                             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-emerald-200/80">
-                              Password Cracker Demo
+                              {title} Demo
                             </p>
                             <p className="mt-3 font-mono text-sm leading-7 text-emerald-100/90">
                               We keep the terminal intro on screen until the application has

@@ -27,6 +27,7 @@ export const projects: Project[] = [
     image: "/images/lukascope.png",
     github: "https://github.com/yourname/lukascope",
     demo: "https://luka-scope.vercel.app/",
+    demoMode: "animated",
   },
   {
     id: "03",
