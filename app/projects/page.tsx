@@ -34,7 +34,7 @@ export default function Projects() {
           opacity: 0,
           y: 30,
           letterSpacing: "0.2em",
-          duration: 1.1,
+          duration: 0.6,
           ease: "power3.out",
         });
       }
@@ -44,9 +44,9 @@ export default function Projects() {
         gsap.from(subtitleRef.current, {
           opacity: 0,
           y: 20,
-          duration: 0.9,
+          duration: 0.5,
           ease: "power2.out",
-          delay: 0.3,
+          delay: 0.15,
         });
       }
 
@@ -59,10 +59,10 @@ export default function Projects() {
       gsap.from(cardsRef.current, {
         opacity: 0,
         y: 60,
-        duration: 1.1,
+        duration: 0.6,
         ease: "power3.out",
-        stagger: 0.2,
-        delay: 0.5,
+        stagger: 0.1,
+        delay: 0.25,
       });
     }, sectionRef);
 
