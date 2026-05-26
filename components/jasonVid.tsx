@@ -16,13 +16,16 @@ const JasonVid = ({ onFinish }: JasonVidProps) => {
         if (!containerRef.current || !videoRef.current) return;
 
         // container is black, fade in video itself
+        // Speed up video playback
+        videoRef.current.playbackRate = 2;
+
         gsap.fromTo(
             videoRef.current,
             { opacity: 0, scale: 1.02 },
             {
                 opacity: 1,
                 scale: 1,
-                duration: 0.8,
+                duration: 0.4,
                 ease: 'power2.out',
             }
         );
@@ -38,7 +41,7 @@ const JasonVid = ({ onFinish }: JasonVidProps) => {
             gsap.to(video, {
                 opacity: 0,
                 scale: 0.98,
-                duration: 0.6,
+                duration: 0.3,
                 ease: 'power2.in',
                 onComplete: onFinish,
             });
