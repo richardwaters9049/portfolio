@@ -131,18 +131,17 @@ const Page: React.FC = () => {
                             I build systems that think, defend, and evolve beyond human limits.
                         </p>
 
-                        <p ref={addToRefs} className="text-muted-foreground font-bitter text-xl tracking-wider leading-relaxed">
+                        <p ref={addToRefs} className="font-bitter text-xl tracking-wider leading-relaxed">
                             With a First-Class Honours degree in Computer Science and over a
                             decade in software engineering, I’ve developed AI models that detect
                             leukaemia years before symptoms appear, created honeypots that trap
-                            attackers inside virtual environments, and built secure, scalable
+                            attackers inside virtual environments,
+                            custom password cracker tools, and built secure, scalable
                             platforms for major retail brands.
                         </p>
 
-                        <p ref={addToRefs} className="text-muted-foreground font-bitter text-xl tracking-wider leading-relaxed">
-                            I love blending creativity with computation — practical, ethical,
-                            and sometimes a little fun. Feel free to reach out… unless
-                            it’s about Java ☕ — that’s still terrifying. 💀
+                        <p ref={addToRefs} className="font-bitter text-xl tracking-wider leading-relaxed">
+                            I love blending creativity with computation. Feel free to contact me about any projects or opportunities.
                         </p>
                     </div>
 

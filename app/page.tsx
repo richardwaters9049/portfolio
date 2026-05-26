@@ -116,7 +116,7 @@ const Home: React.FC = () => {
   return (
     <main
       ref={mainRef}
-      className="relative w-screen h-screen flex flex-col items-center justify-center bg-black dark:bg-black text-slate-100 gap-12 text-center p-6 overflow-hidden"
+      className="relative w-screen h-screen flex flex-col items-center justify-center bg-black text-white gap-12 text-center p-6 overflow-hidden"
     >
       {/* Bat */}
       <Lottie
@@ -145,9 +145,9 @@ const Home: React.FC = () => {
            bg-transparent border-none hover:bg-transparent
            relative group"
       >
-        <span className="relative">
+        <span className="relative text-white">
           Enter
-          <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-slate-200 
+          <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-white 
                     transition-all duration-300 group-hover:w-full"></span>
         </span>
       </Button>
