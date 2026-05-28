@@ -182,30 +182,24 @@ export default function ProjectCard({
           >
             GitHub
           </Link>
-          {project.demoMode === "terminal" ? (
-            <button
-              type="button"
-              onClick={() => onOpenProjectDemo(project)}
-              className="underline underline-offset-4 hover:opacity-70 transition"
-            >
-              Demo
-            </button>
-          ) : project.demoMode === "animated" ? (
-            <button
-              type="button"
-              onClick={() => onOpenProjectDemo(project)}
-              className="underline underline-offset-4 hover:opacity-70 transition"
-            >
-              Demo
-            </button>
-          ) : (
-            <Link
-              href={project.demo}
-              target="_blank"
-              className="underline underline-offset-4 hover:opacity-70 transition"
-            >
-              Demo
-            </Link>
+          {project.demo !== "False" && (
+            project.demoMode === "terminal" || project.demoMode === "animated" ? (
+              <button
+                type="button"
+                onClick={() => onOpenProjectDemo(project)}
+                className="underline underline-offset-4 hover:opacity-70 transition"
+              >
+                Demo
+              </button>
+            ) : (
+              <Link
+                href={project.demo}
+                target="_blank"
+                className="underline underline-offset-4 hover:opacity-70 transition"
+              >
+                Demo
+              </Link>
+            )
           )}
         </div>
       </div>
@@ -218,7 +212,7 @@ export default function ProjectCard({
         >
           {imagePanel}
         </button>
-      ) : (
+      ) : project.demo !== "False" ? (
         <Link
           href={project.demo}
           target="_blank"
@@ -226,6 +220,12 @@ export default function ProjectCard({
         >
           {imagePanel}
         </Link>
+      ) : (
+        <div
+          className="group relative flex h-[270px] w-full items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 dark:border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
+        >
+          {imagePanel}
+        </div>
       )}
     </div>
   );
