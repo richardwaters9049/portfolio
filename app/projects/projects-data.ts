@@ -31,11 +31,11 @@ export const projects: Project[] = [
   },
   {
     id: "03",
-    title: "Arc and Chrome YouTube Speed Extension",
+    title: "YouTube Speed & Volume Browser Extension",
     description: "Adjust speed and volume of YouTube including custom values.",
     image: "/images/yt-screen.png",
     github: "https://github.com/richardwaters9049/YouTube_Extension.git",
-    demo: "https://demo-link.com",
+    demo: "False",
   },
   {
     id: "04",
@@ -44,7 +44,7 @@ export const projects: Project[] = [
       "Dockerized Python + Next.js script runner for repeatable local dev and testing workflows.",
     image: "/images/IT.png",
     github: "https://github.com/richardwaters9049/DockerScripts.git",
-    demo: "docker-script-terminal",
+    demo: "False",
     demoMode: "terminal",
   },
 ];
