@@ -126,12 +126,13 @@ export default function Projects() {
 
       {/* Grid */}
       <div className="grid gap-12 max-w-6xl mx-auto">
-        {projects.map((project) => (
+        {projects.map((project, index) => (
           <ProjectCard
             key={project.id}
             project={project}
             cardRef={addToRefs}
             onOpenProjectDemo={handleOpenProjectDemo}
+            priority={index === 0}
           />
         ))}
       </div>

@@ -9,6 +9,7 @@ type ProjectCardProps = {
   project: Project;
   onOpenProjectDemo: (project: Project) => void;
   cardRef?: (el: HTMLDivElement | null) => void;
+  priority?: boolean;
 };
 
 type ImageDimensions = {
@@ -122,6 +123,7 @@ export default function ProjectCard({
   project,
   onOpenProjectDemo,
   cardRef,
+  priority,
 }: ProjectCardProps) {
   const [imageDimensions, setImageDimensions] = useState<ImageDimensions>(
     IMAGE_FRAME,
@@ -143,6 +145,7 @@ export default function ProjectCard({
           width={imageDimensions.width}
           height={imageDimensions.height}
           className="max-h-full max-w-full w-auto rounded-xl border border-white/40 bg-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.18)] transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+          priority={priority}
           onLoad={(event) => {
             const target = event.currentTarget;
             setImageDimensions(
