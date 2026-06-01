@@ -181,7 +181,7 @@ const Page: React.FC = () => {
                                 </button>
 
                                 <Link
-                                    href="https://raw.githubusercontent.com/richardwaters9049/CV/master/CV_Examples/AprilCV.pdf"
+                                    href="https://github.com/richardwaters9049/CV/blob/master/CV_Examples/JuneCV.pdf"
                                     target="_blank"
                                     className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
                                 >
