@@ -180,14 +180,14 @@ const Page: React.FC = () => {
                                     <span>Projects</span>
                                 </button>
 
-                                <Link
-                                    href="https://github.com/richardwaters9049/CV/blob/master/CV_Examples/JuneCV.pdf"
-                                    target="_blank"
+                                <a
+                                    href="/animations/files/JuneCV.pdf"
+                                    download="JuneCV.pdf"
                                     className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
                                 >
                                     <FaFilePdf className="text-5xl mb-3 text-red-600" />
                                     <span>Download CV</span>
-                                </Link>
+                                </a>
                             </div>
 
                             <div ref={copyContainerRef} className="flex gap-6 items-center mt-6">
