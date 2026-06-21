@@ -11,22 +11,22 @@ export type Project = {
 export const projects: Project[] = [
   {
     id: "01",
-    title: "Password Cracker",
-    description:
-      "GPU-accelerated password cracking system built for security research, benchmarking, and threat modelling.",
-    image: "/images/pw-crack-img.png",
-    github: "https://github.com/yourname/password-cracker",
-    demo: "https://password-cracker.onrender.com/",
-    demoMode: "animated",
-  },
-  {
-    id: "02",
     title: "LukaScope",
     description:
       "AI-driven system for early leukaemia detection, leveraging longitudinal medical data and predictive modelling.",
     image: "/images/Lukanewlogo.png",
     github: "https://github.com/richardwaters9049/LukaScope",
     demo: "https://luka-scope.vercel.app/",
+    demoMode: "animated",
+  },
+  {
+    id: "02",
+    title: "Password Cracker",
+    description:
+      "GPU-accelerated password cracking system built for security research, benchmarking, and threat modelling.",
+    image: "/images/pw-crack-img.png",
+    github: "https://github.com/yourname/password-cracker",
+    demo: "https://password-cracker.onrender.com/",
     demoMode: "animated",
   },
   {
