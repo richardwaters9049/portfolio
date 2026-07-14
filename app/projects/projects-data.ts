@@ -8,6 +8,10 @@ export type Project = {
   demoMode?: "external" | "terminal" | "animated";
 };
 
+export function hasProjectDemo(project: Project) {
+  return project.demo.trim().toLowerCase() !== "false";
+}
+
 export const projects: Project[] = [
   {
     id: "01",
@@ -21,16 +25,26 @@ export const projects: Project[] = [
   },
   {
     id: "02",
+    title: "Reputrail",
+    description:
+      "Reputrail is an AI-powered reputation platform that analyses customer reviews, drafts responses and automates recovery workflows.",
+    image: "/images/reputrail.png",
+    github: "https://github.com/richardwaters9049/LukaScope",
+    demo: "https://peak-reviews-ai-ops-web.onrender.com/",
+    demoMode: "animated",
+  },
+  {
+    id: "03",
     title: "Password Cracker",
     description:
       "GPU-accelerated password cracking system built for security research, benchmarking, and threat modelling.",
     image: "/images/pw-crack-img.png",
     github: "https://github.com/yourname/password-cracker",
-    demo: "https://password-cracker.onrender.com/",
+    demo: "False",
     demoMode: "animated",
   },
   {
-    id: "03",
+    id: "04",
     title: "YouTube Speed & Volume Browser Extension",
     description: "Adjust speed and volume of YouTube including custom values.",
     image: "/images/yt-screen.png",
@@ -38,7 +52,7 @@ export const projects: Project[] = [
     demo: "False",
   },
   {
-    id: "04",
+    id: "05",
     title: "Docker Script",
     description:
       "Dockerized Python + Next.js script runner for repeatable local dev and testing workflows.",

@@ -106,7 +106,7 @@ export default function AnimatedDemoWindow({
 
   const statusLabel = useMemo(() => {
     if (!videoFinished) {
-      return "Running terminal intro";
+      return "Running...";
     }
 
     if (!iframeLoaded) {
@@ -337,10 +337,6 @@ export default function AnimatedDemoWindow({
                           <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4 backdrop-blur-sm">
                             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-emerald-200/80">
                               {title} Demo
-                            </p>
-                            <p className="mt-3 font-mono text-sm leading-7 text-emerald-100/90">
-                              We keep the terminal intro on screen until the application has
-                              loaded and the animation has finished.
                             </p>
                             <div className="mt-4 flex items-center gap-2">
                               <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-300" />

@@ -3,7 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import type { Project } from "../../app/projects/projects-data";
+import {
+  hasProjectDemo,
+  type Project,
+} from "../../app/projects/projects-data";
 
 type ProjectCardProps = {
   project: Project;
@@ -130,6 +133,9 @@ export default function ProjectCard({
   );
   const [backgroundGradient, setBackgroundGradient] =
     useState<string>(DEFAULT_GRADIENT);
+  const hasDemo = hasProjectDemo(project);
+  const usesDemoWindow =
+    project.demoMode === "terminal" || project.demoMode === "animated";
 
   const imagePanel = (
     <>
@@ -185,8 +191,8 @@ export default function ProjectCard({
           >
             GitHub
           </Link>
-          {project.demo !== "False" && (
-            project.demoMode === "terminal" || project.demoMode === "animated" ? (
+          {hasDemo &&
+            (usesDemoWindow ? (
               <button
                 type="button"
                 onClick={() => onOpenProjectDemo(project)}
@@ -202,12 +208,11 @@ export default function ProjectCard({
               >
                 Demo
               </Link>
-            )
-          )}
+            ))}
         </div>
       </div>
 
-      {project.demoMode === "terminal" || project.demoMode === "animated" ? (
+      {hasDemo && usesDemoWindow ? (
         <button
           type="button"
           onClick={() => onOpenProjectDemo(project)}
@@ -215,7 +220,7 @@ export default function ProjectCard({
         >
           {imagePanel}
         </button>
-      ) : project.demo !== "False" ? (
+      ) : hasDemo ? (
         <Link
           href={project.demo}
           target="_blank"
@@ -225,7 +230,7 @@ export default function ProjectCard({
         </Link>
       ) : (
         <div
-          className="group relative flex h-[270px] w-full items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 dark:border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
+          className="relative flex h-[270px] w-full items-center justify-center overflow-hidden rounded-[1.5rem] border border-black/10 dark:border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
         >
           {imagePanel}
         </div>

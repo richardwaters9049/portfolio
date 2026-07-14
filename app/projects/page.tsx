@@ -7,8 +7,11 @@ import gsap from "gsap";
 import AnimatedDemoWindow from "@/components/ui/animated-demo-window";
 import DockerDemoWindow from "@/components/ui/docker-demo-window";
 import ProjectCard from "../../app/projects/project-card";
-import type { Project } from "../../app/projects/projects-data";
-import { projects } from "../../app/projects/projects-data";
+import {
+  hasProjectDemo,
+  projects,
+  type Project,
+} from "../../app/projects/projects-data";
 import ThemeToggle from "@/components/ui/theme-toggle";
 
 export default function Projects() {
@@ -76,6 +79,10 @@ export default function Projects() {
   };
 
   const handleOpenProjectDemo = (project: Project) => {
+    if (!hasProjectDemo(project)) {
+      return;
+    }
+
     if (project.demoMode === "terminal") {
       setIsDockerDemoOpen(true);
       return;
