@@ -181,7 +181,7 @@ const Page: React.FC = () => {
                                 </button>
 
                                 <a
-                                    href="/animations/files/JuneCV.pdf"
+                                    href="/animations/files/Jul29-2026.pdf"
                                     download="JuneCV.pdf"
                                     className="flex flex-col items-center underline underline-offset-4 text-xl hover:scale-110 transition-transform"
                                 >
